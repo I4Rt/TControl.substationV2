@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+
+    <link rel="stylesheet" href="css/allPagesMainStyle.css">
+    <link rel="stylesheet" href="css/dropdownStyle.css">
+    <link rel="stylesheet" href="css/areaWindowStyle.css">
+    <link rel="stylesheet" href="css/messageHolderStyle.css">
+    <link rel="stylesheet" href="css/centerBar.css">
+    <link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <script src="js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+    <script src="js/chart.js"></script>
+</head>
+<style>
+    .newMessage{
+        width: 100%;
+    }
+    .inputText{
+        min-width: 150px;
+        width: calc(100% - 40px) !important;
+        box-sizing: border-box;
+        padding: 5px;
+        font-size: 16px;
+    }
+    .sendButton{
+        width: 30px;
+        height: 36px !important;
+        margin-left: 5px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 16px;
+    }
+
+    .switch input {display:none;}
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 10px;
+        width: 10px;
+        left: 4px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: #21f33a;
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(14px);
+        -ms-transform: translateX(14px);
+        transform: translateX(14px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 16px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    .sector{
+        position: absolute;
+        z-index: 1000000;
+        border: 2px solid #13bcca;
+    }
+</style>
+<script>
+
+
+    let begin = "";
+    let end = "";
+    let firstUpdate = true;
+    let needUpdate = true;
+    let needUpdateImages = false;
+
+    let needShowTemperature = true;
+    let needShowPower = true;
+
+
+    let current_id = 0;
+
+    let currentData;
+
+    let weatherCurrentData;
+
+    let myChart;
+
+    let curTimeArray;
+    let curWeatherArray;
+    let curPowerArray;
+    let curTemperatureArray;
+
+    function updateLogRecords(){
+        let curId = $("#curId").html()
+        let dataToSend = "{'id':"+curId+", 'limit':100}"
+        fetch("/getNodeNotes", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataToSend,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    let result = JSON.parse(data)
+                    console.log(result, 'background: #ff0000; color: #bada55')
+                    if (result['status'] == 'ok'){
+                        let logRecords = result['logRecords']
+                        $('.log').empty()
+                        for (let i = 0; i < logRecords.length; i++){
+                            let r = logRecords[i]
+                            let elem = "<text> <b>" + r['datetime'] +"   "+ r['user'] +"</b> "+ r['record'] +"</text>"
+                            $('.log').append(elem)
+                        }
+                    }
+
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+    function updateImages(){
+        console.log('need update images ' + needUpdateImages);
+        if(firstUpdate){
+            let imagesNames = currentData['imagesNames'];
+            let insideHTML = '';
+            for(let i = 0; i < imagesNames.length; i++){
+                let imgName = imagesNames[i];
+                insideHTML += '<img src="'+ imgName +'" id="'+current_id+'"/>';
+                current_id += 1;
+            }
+            $('.imagesRow').html(insideHTML)
+            firstUpdate = false;
+        }
+        else{
+            if(needUpdate){
+                let index = 0
+                let exist_index = 0
+                let imagesNames = currentData['imagesNames'];
+                $('.imagesRow>img').each(function (){
+                    if( ! imagesNames.includes($(this).attr('src'))){
+                        console.log('#' + $(this).attr('id'));
+                        $('#' + $(this).attr('id')).remove();
+                        index += 1;
+                        return;
+                    }
+                    exist_index += 1;
+                });
+                if(exist_index < 50 - index){
+                    console.log("exist: " + exist_index)
+                    console.log("total images count: " + imagesNames.length)
+                    for (let m = exist_index; m < imagesNames.length; m++){
+                        console.log("Adding 1")
+                        $('.imagesRow').append('<img src="'+ imagesNames[m] +'" id="'+current_id+'"/>');
+                        current_id += 1;
+                    }
+                }
+                else{
+                    for (let i = index + 1; i > 1; i--){
+                        console.log("Adding 2")
+                        $('.imagesRow').append('<img src="'+ imagesNames[imagesNames.length - i] +'" id="'+current_id+'"/>');
+                        current_id += 1;
+                    }
+                }
+
+
+            }
+            else{
+                if(needUpdateImages){
+                    let imagesNames = currentData['imagesNames'];
+                    console.log('need updating images once. array size: ' + imagesNames.length)
+                    let insideHTML = '';
+                    for(let i = 0; i < imagesNames.length; i++){
+                        let imgName = imagesNames[i];
+                        insideHTML += '<img src="'+ imgName +'" id="'+current_id+'"/>';
+                        current_id += 1;
+                    }
+                    $('.imagesRow').html(insideHTML)
+                    needUpdateImages = false;
+                }
+            }
+        }
+        $('.imagesRow>img').each(function (){
+            $(this).click(function (){
+                console.log('click!')
+                $('.openedImage').attr('src', $(this).attr('src'));
+                $('.imageBG').removeClass('hidden');
+            });
+        });
+    }
+
+
+    function updateData(){
+        let curId = $("#curId").html()
+        let dataToSend = "{'id':"+curId+", 'limit':50}"
+
+        fetch("/getTemperature", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataToSend,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                currentData = JSON.parse(data);
+                    if(needUpdate) {
+                        fetch("/getDataToUpdate", {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: dataToSend,
+                        })
+                        .then((response) => {
+                            response.text().then(function (data) {
+                                let curData = JSON.parse(data);
+                                console.log(curData['imagesNames'])
+                                currentData['imagesNames'] = curData['imagesNames']
+
+                                curTimeArray = curData['time'];
+                                curTemperatureArray = curData['temperature'];
+                                curWeatherArray = curData['weather'];
+                                curPowerArray = curData['power'];
+
+                                newUpdatePageStatistics();
+                                updateImages()
+                            })
+                        })
+                        .catch((error) => {
+                                console.error('Error:', error);
+                        });
+                    }
+                    updatePageStatisticsTemperature()
+                })
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+    function updatePageStatisticsTemperature(){
+        $(".loading").addClass("hidden");
+
+        $("#curTemperatureLine").removeClass("noData");
+        $("#curTemperatureLine").removeClass("normal");
+        $("#curTemperatureLine").removeClass("warning");
+        $("#curTemperatureLine").removeClass("danger");
+        $("#curTemperatureLine").addClass(currentData["temperatureClass"]);
+
+        $("#curTemperatureMarker").removeClass("noData");
+        $("#curTemperatureMarker").removeClass("normal");
+        $("#curTemperatureMarker").removeClass("warning");
+        $("#curTemperatureMarker").removeClass("danger");
+        $("#curTemperatureMarker").addClass(currentData["temperatureClass"]);
+
+
+        $("#curTemperatureLine").html(currentData["temperature"][0]);
+
+
+    }
+    // function updatePageStatistics() {
+    //     const labels = currentData["time"];
+    //     const weatherLabels = weatherCurrentData["time"];
+    //
+    //     console.log("temp size: " + labels.length)
+    //     console.log("weather size: " + labels.length)
+    //
+    //     let totalLabels = []
+    //
+    //     for (let n = 0; n < labels.length; n++) {
+    //         totalLabels[n] = labels[n];
+    //     }
+    //
+    //
+    //     for (let k = 0; k < weatherLabels.length; k++) {
+    //         if (!totalLabels.includes(weatherLabels[k])) {
+    //             totalLabels.push(weatherLabels[k]);
+    //         }
+    //     }
+    //     console.log("total size: " + totalLabels.length)
+    //
+    //     totalLabels = totalLabels.sort(); // time sorting: bug!
+    //
+    //     let insideData1 = []
+    //     let insideData2 = []
+    //
+    //
+    //     for (let i = 0; i < totalLabels.length; i++) {
+    //         let setData1 = false;
+    //         let setData2 = false;
+    //
+    //         for (let j = 0; j < currentData["temperature"].length; j++) {
+    //             if (currentData["time"][j] == totalLabels[i]) {
+    //                 setData1 = true;
+    //                 insideData1.push(currentData["temperature"][j])
+    //             }
+    //         }
+    //         if (setData1 == false) {
+    //             insideData1.push(null)
+    //         }
+    //         for (let j = 0; j < weatherCurrentData["weatherTemperature"].length; j++) {
+    //             if (weatherCurrentData["time"][j] == totalLabels[i]) {
+    //                 setData2 = true;
+    //                 insideData2.push(weatherCurrentData["weatherTemperature"][j])
+    //                 break;
+    //             }
+    //         }
+    //         if (setData2 == false) {
+    //             insideData2.push(null)
+    //         }
+    //     }
+    //     console.log("array size: " + totalLabels.length)
+    //     console.log("data1 " + insideData1.length)
+    //     console.log(insideData1)
+    //     console.log("data2 " + insideData2.length)
+    //     console.log(insideData2)
+    //
+    //
+    //     console.log("bool " + needShowTemperature)
+    //     console.log("temperature data " + currentData["temperature"])
+    //
+    //     let cloneTime = [...currentData["time"]]
+    //     let temperatures = [...currentData["temperature"]];
+    //
+    //     const myData = {
+    //         labels: needShowTemperature ? totalLabels : cloneTime.reverse(),
+    //         datasets: needShowTemperature ?
+    //             [
+    //                 {
+    //                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период",
+    //                     backgroundColor: 'rgb(255, 99, 132)',
+    //                     borderColor: 'rgb(255, 99, 132)',
+    //                     data: insideData1,
+    //                 },
+    //                 {
+    //                     label: "Данные температуры воздуха",
+    //                     backgroundColor: 'rgb(99, 255, 132)',
+    //                     borderColor: 'rgb(99, 255, 132)',
+    //                     data: insideData2,
+    //                 }
+    //             ]
+    //             :
+    //             [
+    //                 {
+    //                     label: needUpdate ? "Данные за последние 50 измерений" : "Данные за выбранный период",
+    //                     backgroundColor: 'rgb(255, 99, 132)',
+    //                     borderColor: 'rgb(255, 99, 132)',
+    //                     data: temperatures.reverse(),
+    //                 }
+    //             ]
+    //     };
+    //     const config = {
+    //         type: 'line',
+    //         data: myData,
+    //         options: {
+    //             spanGaps: true,
+    //             animation: {
+    //                 duration: 0
+    //             }
+    //         }
+    //     };
+    //     if (myChart != null) {
+    //         myChart.destroy();
+    //     }
+    // }
+
+    function newUpdatePageStatistics(){
+        const myLabels = curTimeArray;
+        let myDatasets;
+        if(needShowTemperature && needShowPower){
+
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                },
+                {
+                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(99, 132, 255)',
+                    borderColor: 'rgb(99, 132, 255)',
+                    data:  curWeatherArray,
+                },
+                {
+                    label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
+                    yAxisID: 'yAxisRight',
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
+                    data:  curPowerArray,
+                }
+            ];
+        }
+        else if(needShowTemperature){
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                },
+                {
+                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха" ,
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(99, 132, 255)',
+                    borderColor: 'rgb(99, 132, 255)',
+                    data:  curWeatherArray,
+                }
+            ];
+        }
+        else if(needShowPower){
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                },
+                {
+                    label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
+                    yAxisID: 'yAxisRight',
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
+                    data:  curPowerArray,
+                }
+            ];
+        }
+        else{
+            myDatasets = [
+                {
+                    label: needUpdate ? "Данные температур за 50 измерений" : "Данные температуры объекта контроля" ,
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data:  curTemperatureArray,
+                }
+            ];
+        }
+
+        const myData = {
+            labels: myLabels,
+            datasets: myDatasets
+        };
+        console.log(myDatasets)
+        const config = {
+            type: 'line',
+            data: myData,
+            options: {
+                scales: {
+                    'yAxisLeft':{
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            color: 'black',
+                            display: true,
+                            text: 'Температура'
+                        }
+                    },
+                    'yAxisRight':{
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            color: 'black',
+                            display: true,
+                            text: 'Мощность'
+                        },
+                        grid: {display: false}
+                    }
+                },
+                spanGaps: true,
+                animation: {
+                    duration: 0
+                }
+            }
+        };
+        if (myChart != null) {
+            myChart.destroy();
+        }
+
+
+        myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+        $(".loading").addClass("hidden");
+        $("#myChart").removeClass("hidden");
+
+        console.log('Chart updated!')
+    }
+
+
+
+
+
+    function updateWeather(){
+        fetch("/getWeather", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    $(".weatherBar").html(data)
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    setInterval(function(){
+        updateMute();
+        updateAlertsFetch();
+        updateData();
+        updateWeather();
+        updateLogRecords();
+    }, 3000);
+</script>
+<body>
+    <div class="imageBG hidden">
+        <div style="position: relative;">
+            <img src="imgData/7_11/Андрей/18_9_39.jpg" class="openedImage">
+            <div class="sector" th:style="${sector}"></div>
+        </div>
+
+    </div>
+    <div class="topBar">
+        <div class="buttonsBar">
+            <text id="sysActions">Система</text>
+            <text id="directActions">Управление</text>
+            <text id="userActions">Пользователь</text>
+        </div>
+        <div class="centerBar">
+            <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
+            <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
+            <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
+            <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
+        </div>
+        <div class="weatherBar">
+            <text>Обновление</text>
+            <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="myRow noGap">
+            <div class="myColumn seventy">
+                <div class="chart">
+                    <img src="img/loading.gif" class="loading" style="height: 300px;">
+                    <canvas id="myChart"></canvas>
+                </div>
+
+                <div class="myColumn">
+                    <div class="myRow imagesRow" style="width: 650px; justify-content: flex-start">
+
+                    </div>
+                </div>
+
+                <div class="myColumn">
+                    <text style="width: 650px">Отображения</text>
+                </div>
+                <div class="myColumn">
+                    <div class="myRow" style="width: 650px; justify-content: flex-start">
+                        <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
+                        <button class="basicButton" style="width: fit-content; font-size: 16px" id="power">Нагрузки</button>
+                    </div>
+                </div>
+
+                <div class="myColumn">
+                    <text style="width: 650px">Настройка графика</text>
+                </div>
+                <div class="myColumn">
+                    <div class="myRow" style="width: 650px;">
+                        <text>C </text>
+                        <text>Число:</text>
+                        <input id="beginDay" type="date">
+                        <text>Время:</text>
+                        <input id="beginTime" type="time">
+                    </div>
+                    <div class="myRow" style="width: 650px;">
+                        <text>ПО </text>
+                        <text>Число:</text>
+                        <input id="endDay" type="date">
+                        <text>Время:</text>
+                        <input id="endTime" type="time">
+                    </div>
+                    <div class="myRow" style="width: 650px;">
+                        <button id="makeChartRequest" class="basicButton" style="width: calc(50% - 10px)">Сформировать график</button>
+                        <button id="beginUpdate" class="basicButton" style="width: calc(50% - 10px)">Возобновить мониторинг</button>
+                    </div>
+                </div>
+            </div>
+            <div class="myColumn thirty">
+                <div class="myRow start hidden"><text id="curId" th:text="${controlObject.id}"></text></div>
+                <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
+                <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
+                <div class="myRow "><text style="width: 55%">Критическая разность температур, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
+                <div class="myRow "><text style="width: 55%">Допустимое отличие от модели, °C: </text> <input class="maxPredictedDifference" type="number" title="Допустимое отличие от модели" th:value="${controlObject.maxPredictedDifference}" ></div>
+                <div class="myRow "><text style="width: 55%">Зона контроля МИП: </text>
+                    <select name="MIPChanel" id="MIPChanel" th:field="${controlObject.voltageMeasurementChannel}" required>
+                        <option th:value="'A'" th:text="A">A</option>
+                        <option th:value="'B'" th:text="B">B</option>
+                        <option th:value="'C'" th:text="C">C</option>
+                    </select>
+                </div>
+                <div class="myRow ">
+                    <text>Сигнализация: </text>
+                    <div><label class="switch"><input onclick="setMute()" id="sliderCheckbox" type="checkbox" checked><span class="slider round"></span></label></div>
+                </div>
+                <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
+                <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}">Обновление</b></div></div>
+
+                <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
+                <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
+                <a style="width: 100%" id="reportLink" ><button class="basicButton">Сформировать отчет</button></a>
+                <button class="delButton">Удалить</button>
+                <h5 style="align-self: flex-start; margin-bottom: 2px">Комментарии</h5>
+                <div class="log" style="padding: 5px; border: 1px solid #262626; display: flex; gap: 5px; flex-direction: column; width: 100%;height: 240px;overflow-y: scroll;"></div>
+                <div class="newMessage">
+                    <input class="inputText" type="text" id="record">
+                    <button class="sendButton" onclick="addRecord()">↲</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dropdown system hidden">
+        <a href="/main">Главная страница контроля</a>
+        <a href="/newArea">Создать новый объект контроля</a>
+        <a href="/report">Сформировать отчет</a>
+    </div>
+    <div class="dropdown directions hidden">
+        <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
+        <a id="reboot">Перезапустить тепловизоры</a>
+    </div>
+    <div class="dropdown user hidden">
+        <div class="myColumn">
+            <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+            <div class="myRow" style="justify-content: flex-start">
+                <b th:utext="${user.getName}"></b>
+                <b th:utext="${user.getSurname}"></b>
+            </div>
+            <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+            <div class="myRow" th:utext="${user.getRole}">
+                <b th:utext="${user.getRole}"></b>
+            </div>
+        </div>
+        <hr/>
+        <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+        <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
+        <a href="/user">Изменить пароль</a>
+        <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+    </div>
+
+    <div class="messageHolder">
+        <div class="message green hidden" id="ti1_ok">
+            <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti2_ok">
+            <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti3_ok">
+            <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti4_ok">
+            <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ws_ok">
+            <div class="text green">Подключение к метеостанции восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="mip_ok">
+            <div class="text green">Подключение к MIP</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message red hidden" id="ti1_error">
+            <div class="text red">Отсутствует подключение к тепловизору 1</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti2_error">
+            <div class="text red">Отсутствует подключение к тепловизору 2</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti3_error">
+            <div class="text red">Отсутствует подключение к тепловизору 3</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti4_error">
+            <div class="text red">Отсутствует подключение к тепловизору 4</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ws_error">
+            <div class="text red">Отсутствует подключение к метеостанции</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="mip_error">
+            <div class="text red">Отсутствует подключение к МИП</div>
+            <div class="messageCross red">X</div>
+        </div>
+    </div>
+</body>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/warnings.js"></script>
+<script>
+    $('#reportLink').attr("href", "pointReport?id=" + parseInt($("#curId").html()))
+
+    $("#makeChartRequest").click(function (){
+        $(".loading").removeClass("hidden");
+        $("#myChart").addClass("hidden");
+        needUpdate = false;
+        needUpdateImages = true;
+
+        let date1 = $("#beginDay").val();
+        let normalDate1 = date1.split("-")[2] + "." + date1.split("-")[1] + "." + date1.split("-")[0]
+
+
+        let date2 = $("#endDay").val();
+        let normalDate2 = date2.split("-")[2] + "." + date2.split("-")[1] + "." + date2.split("-")[0]
+
+
+        let value1 = normalDate1 + "-" +$("#beginTime").val()+":00"
+        let value2 = normalDate2 + "-" +$("#endTime").val()+":00"
+
+        console.log('begin: ' + value1)
+        console.log('end: ' + value2)
+
+
+
+        let dataToSend = {};
+
+        dataToSend["id"] = parseInt($("#curId").html());
+        dataToSend["begin"] = value1;
+        dataToSend["end"] = value2;
+
+        let dataStringToSend = JSON.stringify(dataToSend);
+
+        console.log(dataStringToSend)
+
+        fetch("/getTemperatureInRange", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataStringToSend,
+        })
+            .then((response) => {
+                response.text().then(function (data) {
+                    console.log('Data got point 1')
+                    let curData = JSON.parse(data);
+
+                    currentData['imagesNames'] = curData['imagesNames']
+
+                    curTimeArray = curData['time'];
+                    curTemperatureArray = curData['temperature'];
+                    curWeatherArray = curData['weather'];
+                    curPowerArray = curData['power'];
+
+                    newUpdatePageStatistics();
+                    updateImages()
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+
+            });
+    });
+    $(".main").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+    });
+
+    $("#sysActions").click(function (){
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".system").toggleClass("hidden");
+    });
+    $(".system").click(function (){
+        $(".system").toggleClass("hidden");
+    });
+
+    $("#directActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".directions").toggleClass("hidden");
+    });
+    $(".directions").click(function (){
+        $(".directions").toggleClass("hidden");
+    });
+
+    $("#userActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").toggleClass("hidden");
+    });
+    $(".user").click(function (){
+        $(".user").toggleClass("hidden");
+    });
+
+    function updateObject(id){
+        if($(".name").val() != "" && $(".dangerTemp").val() != "" && $(".warningTemp").val() != "" && $('.maxPredictedDifference').val() != ""){
+            let currentDataInside = "{ \"id\": " + id +"," +
+                "\"name\": \"" + $(".name").val() +"\"," +
+                "\"dangerTemp\": " + $(".dangerTemp").val() +"," +
+                "\"warningTemp\": " + $(".warningTemp").val() + "," +
+                "\"maxPredictedDifference\": "+ $('.maxPredictedDifference').val() + "," +
+                "\"MIPChanel\": " + $("#MIPChanel").val() +
+                "}";
+
+                console.log(currentDataInside);
+            fetch("/saveArea", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: currentDataInside,
+            })
+            .then((response) => {
+                response.text().then(function (data){
+                    if(data[0] == '<'){
+                        window.location.replace("403");
+                    }
+                    else{
+                        let temp = JSON.parse(data);
+
+                        if(temp["message"].length < 20){
+                            currentData["temperatureClass"] = temp["temperatureClass"];
+                            updatePageStatisticsTemperature();
+                        }
+                        alert(temp["message"])
+                    }
+
+                });
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        else{
+            alert("Введите значения для всех полей!")
+        }
+
+    }
+
+
+
+    $("#beginUpdate").click(function (){
+        $(".loading").removeClass("hidden");
+        $("#myChart").addClass("hidden");
+        needUpdate = true;
+        firstUpdate = true;
+        begin = "";
+        end = "";
+    });
+
+    $(".delButton").click(function (){
+        fetch("/deleteArea?id=" + parseInt($("#curId").html()), {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        });
+        window.location.replace("main");
+
+    });
+
+    $('#weatherTemperature').click(function (){
+       needShowTemperature = !needShowTemperature;
+       newUpdatePageStatistics();
+    });
+
+    $('#power').click(function (){
+        needShowPower = !needShowPower;
+        newUpdatePageStatistics();
+    });
+
+
+    $('.imageBG').click(function (){
+        $(this).addClass('hidden');
+    });
+
+    $("#refreshConnections").click(function (){
+        fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                alert(data)
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+    $("#reboot").click(function (){
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+
+    $(".messageCross").each(function (){
+        $(this).click(function (){
+            $(this).parent().addClass("hidden");
+        });
+    });
+
+    function addRecord(){
+        if($("#record").val().length > 0){
+            let data = {'id': $("#curId").html(), 'text': $("#record").val()}
+            fetch("/saveNodeNote", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+                .then((response) => {
+                    response.text().then(function (data){
+                        $("#record").val("")
+                        updateLogRecords();
+                    });
+
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+        else{
+            alert("Введите сообщение!")
+        }
+    }
+
+    function setMute(){
+        console.log(! $("#sliderCheckbox").is(':checked'))
+        let data = {'id': $("#curId").html(), 'mute': ! $("#sliderCheckbox").is(':checked')}
+        fetch("/setMute", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    function updateMute(){
+
+        fetch("/getMute?id=" + $("#curId").html(), {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data1){
+                    if (data1 == "true"){
+                        $("#sliderCheckbox").prop('checked',false);
+                    }
+                    else{
+                        $("#sliderCheckbox").prop('checked',true);
+                    }
+                });
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+    $(document).ready(
+        updateMute()
+    )
+</script>
+
+
+
+</html>

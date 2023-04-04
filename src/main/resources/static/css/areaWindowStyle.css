@@ -1,0 +1,110 @@
+.basicButton, .delButton{
+    min-width: 150px;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 5px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.delButton{
+    background-color: darkgray;
+    color: black;
+}
+.delButton:hover{
+    background-color: gray;
+}
+
+.delButton{
+    color: white;
+    background-color: red;
+}
+
+.delButton:hover{
+    background-color: darkred;
+}
+
+.start{
+    justify-content: flex-start !important;
+}
+.end{
+    justify-content: flex-end !important;
+}
+
+.seventy{
+    width:70% !important;
+}
+.thirty{
+    width:30% !important;
+}
+
+.tempHolder{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: min-content;
+    flex-wrap: nowrap;
+    gap: 8px;
+}
+
+input[type="text"], input[type="number"]{
+    width: 150px;
+}
+
+.thirty> .myRow{
+    justify-content: space-between;
+}
+
+.chart{
+    width: 650px;
+    height: 330px;
+}
+
+.imagesRow{
+    background-color: lightgray;
+
+    width: 650px;
+    height: 120px;
+    padding: 10px;
+
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+
+    overflow-x: auto;
+    overflow-y:hidden;
+
+
+}
+
+
+
+
+.imagesRow>img{
+    height: 100px;
+}
+
+.imageBG{
+    z-index: 99;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.2);
+
+    display: flex;
+    position: fixed;
+
+    align-items: center;
+    justify-content: center;
+
+}
+.openedImage{
+    z-index: 100;
+    width: 700px;
+}
+
+.main{
+    width: calc(100% - 0px);
+    height: max-content;
+}

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+
+    <link rel="stylesheet" href="css/allPagesMainStyle.css">
+    <link rel="stylesheet" href="css/mainAdder.css">
+    <link rel="stylesheet" href="css/messageHolderStyle.css">
+    <link rel="stylesheet" href="css/adderInfoStyle.css">
+    <link rel="stylesheet" href="css/chooseObjectWindowStyle.css">
+    <link rel="stylesheet" href="css/dropdownStyle.css">
+    <link rel="stylesheet" href="css/centerBar.css">
+</head>
+<style>
+    *{
+        font-size: 14px;
+    }
+    .logArea{
+        position: relative;
+        top: 603px;
+        left: 848px;
+        margin-left: -848px;
+        width: 844px;
+        border: 2px solid darkgray;
+        height: 147px;
+
+    }
+    .logHeader{
+        position: absolute;
+        padding: 5px;
+        width: 835px;
+        border-bottom: 2px solid darkgray;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .logText{
+        padding: 5px;
+        position: relative;
+        top:30px;
+        height: 107px;
+        display: flex;
+        flex-direction: column;
+        width: 834px;
+        overflow-y: scroll;
+        display: flex;
+        gap: 5px;
+    }
+    .logText > *{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+</style>
+<body>
+    <div class="topBar">
+        <div class="buttonsBar">
+            <text id="sysActions">Система</text>
+            <text id="directActions">Управление</text>
+            <text id="userActions">Пользователь</text>
+        </div>
+        <div class="centerBar">
+            <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
+            <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
+            <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
+            <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
+        </div>
+        <div class="weatherBar">
+            <text>Обновление</text>
+            <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="logArea">
+            <div class="logHeader">Лог событий</div>
+            <div class="logText">
+
+            </div>
+        </div>
+        <div class="map">
+
+
+            <div  class="mapImage" th:style="'background-image:url(' + ${src} + ');'">
+                <div class="maxSize" >
+                    <a class="marker mapMarker" th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="${controlObjectToDisplay.controlObjectTIChangingPart.temperatureClass}" th:name="${controlObjectToDisplay.id}">
+                    </a>
+                </div>
+            </div>
+            <div class="mapActions">
+                <div class="mapActionButton" id="newMarker" title="Добавить маркер на карту"><img src="img/icons/pin.png" style="width: 24px; height: 24px;"></div>
+                <div class="mapActionButton" id="removeMarker" title="Убрать маркер с карты"><img src="img/icons/unpin.png" style="width: 24px; height: 24px;"></div>
+                <div class="mapActionButton" id="upload" title="Сменить подложку"><img src="img/icons/bgSetting.png" style="width: 24px; height: 24px;"></div>
+                <div class="mapActionButton" id="help" title="Справка"><img src="img/icons/question.png" style="width: 24px; height: 24px;"></div>
+            </div>
+        </div>
+
+        <div class="list" style="height: 750px">
+            <div class="myRow" style="font-size: 18px; width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b style="font-size: 16px">Участки наблюдения</b></b></div>
+            <div class="myRow areaList" >
+                <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
+                        <text th:utext="${controlObject.name}">Зона 1</text>
+                        <div class="marker " th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}" th:name="${controlObject.id}"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dropdown system hidden">
+        <a href="/main">Главная страница контроля</a>
+        <a href="/newArea">Создать новый объект контроля</a>
+        <a href="/report">Сформировать отчет</a>
+    </div>
+    <div class="dropdown directions hidden">
+        <a id="refreshConnections">Перезапустить подключения сканеров</a>
+        <a id="reboot">Перезапустить тепловизоры</a>
+    </div>
+    <div class="dropdown user hidden">
+        <div class="myColumn">
+            <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+            <div class="myRow" style="justify-content: flex-start">
+                <b th:utext="${user.getName}"></b>
+                <b th:utext="${user.getSurname}"></b>
+            </div>
+            <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+            <div class="myRow" th:utext="${user.getRole}">
+                <b th:utext="${user.getRole}"></b>
+            </div>
+        </div>
+        <hr/>
+        <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+        <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
+        <a href="/user">Изменить пароль</a>
+        <a href="#" th:href="@{/logout}">Log Out</a>
+    </div>
+
+    <div class="uploadWindow myColumn hidden">
+        <div class="topperAdderBar"></div>
+        <div class="cross">X</div>
+        <div class="uploadInfo">Новая подложка</div>
+        <form class="myRow" action="setNewMap" method="POST"  style="margin-top: 30px !important" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/png"/>
+            <input type="submit" name="setNewButton" value="Обновить">
+        </form>
+        <div class="myRow center">
+            <text style="font-size: 10px">
+                Принимаются изображения только в <b>png</b> формате
+            </text>
+
+        </div>
+    </div>
+    <div class="myColumn parentChooseObjectWindow hidden" style="padding: 10px 0px 0px;z-index: 15;position: absolute;display: block;left: calc(50% - 150px);top: calc(50% - 225px);width: 300px;height: 425px; filter:drop-shadow(0px 2px 4px rgba(0,0,0, 0.4));">
+        <div class="topperAdderBar"></div>
+        <div class="cross" id="closeObjectWindow" style="position: absolute; right: 10px">X</div>
+        <div class="uploadInfo" style="position: absolute; left: 10px">Выберите объект</div>
+        <div class="myColumn chooseObjectWindow" style="margin-top: 35px !important;">
+            <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:name="${controlObject.id}" >
+                <text th:utext="${controlObject.name}"></text>
+                <div class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="messageHolder">
+        <div class="message green hidden" id="ti1_ok">
+            <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti2_ok">
+            <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti3_ok">
+            <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ti4_ok">
+            <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="ws_ok">
+            <div class="text green">Подключение к метеостанции восстановлено</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message green hidden" id="mip_ok">
+            <div class="text green">Подключение к MIP</div>
+            <div class="messageCross green">X</div>
+        </div>
+        <div class="message red hidden" id="ti1_error">
+            <div class="text red">Отсутствует подключение к тепловизору 1</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti2_error">
+            <div class="text red">Отсутствует подключение к тепловизору 2</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti3_error">
+            <div class="text red">Отсутствует подключение к тепловизору 3</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ti4_error">
+            <div class="text red">Отсутствует подключение к тепловизору 4</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="ws_error">
+            <div class="text red">Отсутствует подключение к метеостанции</div>
+            <div class="messageCross red">X</div>
+        </div>
+        <div class="message red hidden" id="mip_error">
+            <div class="text red">Отсутствует подключение к МИП</div>
+            <div class="messageCross red">X</div>
+        </div>
+    </div>
+
+</body>
+<script src="js/jquery.min.js"></script>
+<script src="js/warnings.js"></script>
+<script>
+
+    let currentData;
+    console.log(currentData);
+
+    function updateData(){
+        fetch ("/getMapAndListArraysJSON", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    console.log(data)
+                    currentData = JSON.parse(data);
+                    console.log(currentData);
+
+                    redraw();
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+
+
+
+
+    function updateWeather(){
+        fetch("/getWeather", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    $(".weatherBar").html(data)
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    setInterval(function(){
+        updateData();
+        updateAlertsFetch();
+        updateWeather();
+        getLogRecords()
+    }, 3000);
+
+
+    function redraw(){
+        $(".maxSize").empty();
+
+
+        let dataToDisplay = currentData[1];
+        for(let elementId = 0; elementId < dataToDisplay.length; elementId+=1) {
+
+            $(".maxSize").append("<a class=\"marker mapMarker " + dataToDisplay[elementId]["temperatureClass"] + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  name=\"" + dataToDisplay[elementId]["id"] + "\" >");
+        }
+
+        $(".areaList").empty();
+        let dataToList = currentData[0];
+        for(let elementId = 0; elementId < dataToList.length; elementId+=1) {
+            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\" name=\"" + dataToList[elementId]["id"] + "\"></div></a>");
+        }
+        activateMarkers();
+    }
+
+    let needDelete = false;
+
+    $(".main").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+    });
+
+    $("#sysActions").click(function (){
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".system").toggleClass("hidden");
+    });
+    $(".system").click(function (){
+        $(".system").toggleClass("hidden");
+    });
+
+    $("#directActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".directions").toggleClass("hidden");
+    });
+    $(".directions").click(function (){
+        $(".directions").toggleClass("hidden");
+    });
+
+    $("#userActions").click(function (){
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").toggleClass("hidden");
+    });
+    $(".user").click(function (){
+        $(".user").toggleClass("hidden");
+    });
+
+
+    let offset = $(".mapImage").offset();
+
+    let preparedToAddElementId = null;
+
+    let readyToAddNew = 0;
+
+
+    $(document).click(function (e){
+        console.log("document click")
+        console.log(readyToAddNew)
+
+        if(readyToAddNew > 0){
+            needDelete = false;
+        }
+        if (readyToAddNew == 1){
+            if(e.pageX > offset.left && e.pageX < offset.left + 800 && e.pageY > offset.top && e.pageY < offset.top + 600){
+                newX = e.pageX - offset.left - 11;
+                newY = e.pageY - offset.top - 11
+                fetch("/changeCoordinates", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: "{\"x\": "+newX+", \"y\": "+newY+", \"id\":"+preparedToAddElementId+"}",
+                })
+                    .then((response) => {
+                        response.text().then(function (){
+                            updateData();
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                preparedToAddElementId = null;
+            }
+
+        }
+        readyToAddNew -= 1;
+        if(readyToAddNew < 0){
+            readyToAddNew = 0;
+        }
+        //$(".maxSize").css({"cursor": "default"});
+        console.log(readyToAddNew);
+    });
+
+    $("#newMarker").click(function (){
+        //$(".maxSize").attr("style", "cursor: pointer");
+        console.log("Ready to add")
+        $(".parentChooseObjectWindow").removeClass("hidden");
+        $(".chooseObjectWindow>.areaInfo").each(function (){
+            $(this).click(function (){
+                preparedToAddElementId = $(this).attr('name');
+                console.log("magic: "+ preparedToAddElementId);
+                $(".parentChooseObjectWindow").addClass("hidden");
+                readyToAddNew = 2;
+            });
+        });
+    });
+
+    $("#upload").click(function (){
+        console.log('showed');
+        $(".uploadWindow").removeClass("hidden");
+    });
+
+    $(".cross").click(function (){
+        console.log('closed');
+        $(".uploadWindow").addClass("hidden");
+    });
+
+    $("#closeObjectWindow").click(function (){
+        $(".parentChooseObjectWindow").addClass("hidden")
+    })
+
+    $("#refreshConnections").click(function (){
+        fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+    $("#reboot").click(function (){
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                alert(data)
+            })
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+    function activateMarkers(){
+        $('.maxSize>.mapMarker').each(function (){
+            $(this).click(function () {
+                //$(".maxSize").css({"cursor": "default"});
+                console.log('clicked marker');
+                if(needDelete){
+                    fetch("/dropMapCoordinates?id=" + parseInt($(this).attr('name')), {
+                        method: "PUT",
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: null,
+                    })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
+
+                    $(this).remove();
+                    needDelete = false
+                }
+                else{
+                    window.location.replace("area?id=" + parseInt($(this).attr('name')));
+                }
+            })
+        })
+    }
+
+    $('#removeMarker').click(function (){
+        needDelete = true;
+        //$(".maxSize").attr("style", "cursor: no");
+
+    })
+
+    function getLogRecords(){
+        fetch("/getLog", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    let result = JSON.parse(data);
+                    $('.logText').empty();
+                    for (let i = 0; i < result.length; i++){
+                        let r = result[i];
+                        let elem = "<text> <b>" + r['datetime'] + "</b>: "+ r['text'] +"</text>";
+                        $('.logText').append(elem);
+                    }
+
+
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+    $(document).ready(
+        activateMarkers()
+
+    )
+</script>
+
+
+
+
+
+</html>

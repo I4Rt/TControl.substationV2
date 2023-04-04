@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+
+    <link rel="stylesheet" href="css/allPagesMainStyle.css">
+    <link rel="stylesheet" href="css/dropdownStyle.css">
+    <link rel="stylesheet" href="css/messageHolderStyle.css">
+    <link rel="stylesheet" href="css/addingWindow.css">
+    <link rel="stylesheet" href="css/adderInfoStyle.css">
+    <link rel="stylesheet" href="css/centerBar.css">
+    <link href="css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
+</head>
+<style>
+    *{
+        font-size: 14px;
+    }
+</style>
+<body>
+<div class="topBar">
+    <div class="buttonsBar">
+        <text id="sysActions">Система</text>
+        <text id="directActions">Управление</text>
+        <text id="userActions">Пользователь</text>
+    </div>
+    <div class="centerBar">
+        <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
+        <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
+        <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
+        <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
+    </div>
+    <div class="weatherBar">
+        <text>Обновление</text>
+        <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
+    </div>
+</div>
+
+<div class="main">
+    <div class="display">
+        <div class="vision">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="1" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">ТВ1</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="2" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">ТВ2</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="3" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ТВ3</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="4" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">ТВ4</button>
+                </li>
+            </ul>
+            <div style="height: 493px" class="tab-content" id="myTabContent">
+
+                <div class="divCenterHolder tab-pane fade show " role="tabpanel" >
+                    <div class="gotImage"><img class="gotImg" th:src="${src}"></div>
+                </div>
+            </div>
+
+            <div class="thermalCameraActionRow">
+                <div class="navigateButtons">
+                    <div class="up"><div>↑</div></div>
+                    <div class="down"><div>↓</div></div>
+                    <div class="right"><div>→</div></div>
+                    <div class="left"><div>←</div></div>
+                </div>
+                <div class="thermalCameraInfoHolder">
+                    <div class="step"><text>Шаг переноса:</text> <input id="step" type="text" value="5.0"></div>
+                    <div class="declination"><text>Горизонтальное склонение:</text> <input class="change" th:value="${horizontal}" id="horizontal" type="text" value="32.0"></div>
+                    <div class="declination"><text>Вертикальное склонение:</text> <input class="change" th:value="${vertical}" id="vertical" type="text" value="11.0"></div>
+                    <div class="focusing"><text>Фокусировка:</text> <input class="change" type="number" min="500" max="5000" th:value="${focusing}" id="focusing"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visionActions">
+            <div class="visionActionButton" id="newArea" title="Добавить область на карту"><img src="img/icons/select.png" style="width: 20px; height: 20px;"></div>
+            <div class="visionActionButton" id="autoFocusing" title="Сфокусироваться"><img src="img/icons/focus.png" style="width: 20px; height: 20px;"></div>
+            <div class="visionActionButton" id="help" title="Справка"><img src="img/icons/question.png" style="width: 20px; height: 20px;"></div>
+        </div>
+    </div>
+
+    <div class="list ">
+        <div class="myRow" style=" width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b>Участки наблюдения</b></b></div>
+        <div class="myRow chooseAble">
+            <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:id="${controlObject.id}">
+                <text th:utext="${controlObject.name}"></text>
+                <div class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="dropdown system hidden">
+    <a href="/main">Главная страница контроля</a>
+    <a href="/newArea">Создать новый объект контроля</a>
+    <a href="/report">Сформировать отчет</a>
+</div>
+<div class="dropdown directions hidden">
+    <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
+    <a id="reboot">Перезапустить тепловизоры</a>
+</div>
+<div class="dropdown user hidden">
+    <div class="myColumn">
+        <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+        <div class="myRow" style="justify-content: flex-start">
+            <b th:utext="${user.getName}"></b>
+            <b th:utext="${user.getSurname}"></b>
+        </div>
+        <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+        <div class="myRow" th:utext="${user.getRole}">
+            <b th:utext="${user.getRole}"></b>
+        </div>
+    </div>
+    <hr/>
+    <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+    <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
+    <a href="/user">Изменить пароль</a>
+    <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+</div>
+
+<div class="messageHolder">
+    <div class="message green hidden" id="ti1_ok">
+        <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti2_ok">
+        <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti3_ok">
+        <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti4_ok">
+        <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ws_ok">
+        <div class="text green">Подключение к метеостанции восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="mip_ok">
+        <div class="text green">Подключение к MIP</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message red hidden" id="ti1_error">
+        <div class="text red">Отсутствует подключение к тепловизору 1</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti2_error">
+        <div class="text red">Отсутствует подключение к тепловизору 2</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti3_error">
+        <div class="text red">Отсутствует подключение к тепловизору 3</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti4_error">
+        <div class="text red">Отсутствует подключение к тепловизору 4</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ws_error">
+        <div class="text red">Отсутствует подключение к метеостанции</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="mip_error">
+        <div class="text red">Отсутствует подключение к МИП</div>
+        <div class="messageCross red">X</div>
+    </div>
+</div>
+</body>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/warnings.js"></script>
+<script>
+
+    let allowed = false;
+    let allowedSelected = false;
+
+
+    let busy = false;
+    let waiting = false;
+    let last_command = 0;
+
+    let needChangeTab = true;
+
+    let curActionsCounter = 1;
+    let prevActionsCounter = 0;
+
+
+
+
+    function wait_command(command){
+        waiting = true;
+        console.log("command " + command)
+        console.log("last command " + last_command)
+        console.log("busy " + busy)
+        setTimeout(
+            function (){
+                if(command != last_command || busy == true){
+                    console.log("continue waiting");
+                    wait_command(last_command);
+                }
+                else{
+                    moveAndView()
+                    waiting = false;
+                }
+            },
+            800
+        );
+    }
+
+
+
+    function updateWeather(){
+        fetch("/getWeather", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    $(".weatherBar").html(data)
+                })
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+    setInterval(function(){
+        updateAlertsFetch();
+        updateWeather();
+    }, 3000);
+
+    let currentChanging;
+    let currentData;
+
+    $(".chooseAble>.areaInfo").each(function (){
+        $(this).click(function (){
+            curActionsCounter += 1
+            if(! busy){
+                $('.sector').remove();
+                currentChanging = $(this).attr('id');
+                console.log("Current id: " + currentChanging)
+                getCoordinatesDataById(currentChanging);
+                $(".chooseAble>.areaInfo").each(function (){
+                    $(this).removeClass("selected");
+                });
+                $(this).addClass("selected")
+                allowedSelected = true;
+            }
+            else {
+                alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+            }
+        });
+    });
+
+    function saveCoordinates(x, y, areaHeight, areaWidth){
+        let dataToSend = {};
+        if(currentChanging == null){
+            alert('Сначала выберите координаты какой зоны вы хотите изменить');
+            return;
+        }
+        dataToSend["id"] = currentChanging;
+        dataToSend["tiID"] = $('.active').attr('id');
+        dataToSend["horizontal"] = parseFloat($("#horizontal").val());
+        dataToSend["vertical"] = parseFloat($("#vertical").val());
+        dataToSend["focusing"] = parseFloat($("#focusing").val());
+
+        dataToSend["x"] = parseInt(x);
+        dataToSend["y"] = parseInt(y);
+        dataToSend["areaHeight"] = parseInt(areaHeight);
+        dataToSend["areaWidth"] = parseInt(areaWidth);
+
+        let dataStringToSend = JSON.stringify(dataToSend);
+
+        console.log(dataStringToSend);
+
+        fetch("/setCoordinatesThermalViewer", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: dataStringToSend,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    if(data == "doubleUsers"){
+                        window.location.replace("doubleUsers");
+                    }
+                    alert(data)
+                });
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+
+    function getCoordinatesDataById(id){
+        if( ! busy){
+            busy = true;
+            let previousImage = $(".gotImg").attr("src");
+            $(".gotImg").attr("src", "img/loading.gif");
+            fetch("/getCoordinatesById?id=" + id, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: null,
+            })
+                .then((response) => {
+                    response.text().then(function (data){
+                        if(data == "doubleUsers"){
+                            window.location.replace("doubleUsers");
+                        }
+                        busy = false;
+                        //1001001
+                        currentData = JSON.parse(data);
+                        console.log("Error may be: " + data)
+                        if(currentData["newUrl"] == "error"){
+                            allowed = false;
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                            alert('Тепловизору не удалось перейти в назначенные координаты.')
+                        }
+                        else if (currentData["newUrl"] == 'conError'){
+                            allowed = false;
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                            alert('Соединение с тепловизором не установлено.')
+                        }
+                        else if(currentData["tiID"] == "null"){
+                            $(".gotImg").attr("src", previousImage);
+                            alert("Координаты данной зоны не назначены");
+                        }
+                        else{
+                            $('.nav-tabs>.nav-item>.nav-link').each(
+                                function () {
+                                    $(this).removeClass('active');
+                                }
+                            )
+                            $('#'.concat(currentData["tiID"])).addClass('active');
+                            if(currentData["focusing"] != null){
+                                $("#focusing").val(currentData["focusing"]);
+                            }
+                            if(currentData["horizontal"] != null) {
+                                $("#horizontal").val(currentData["horizontal"]);
+                            }
+                            if(currentData["vertical"] != null) {
+                                $("#vertical").val(currentData["vertical"]);
+                            }
+                            $(".gotImg").attr("src", currentData["newUrl"]);
+                            console.log(currentData["newUrl"])
+
+
+
+                            let areaDiv = "<div class='sector' style='top:"+ currentData["y"] +"px; left:"+ currentData["x"] +"px; height:"+ currentData["areaHeight"] +"px; width:"+ currentData["areaWidth"] +"px;'></div>"
+                            console.log(areaDiv);
+                            $(".sector").remove();
+                            $(".gotImage").append(areaDiv);
+                        }
+
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    busy = false;
+                });
+        }
+        else{
+            alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+        }
+
+    }
+
+    $(".main").click(function (){
+        curActionsCounter += 1;
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+    });
+
+    $("#sysActions").click(function (){
+        curActionsCounter += 1;
+        $(".directions").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".system").toggleClass("hidden");
+    });
+    $(".system").click(function (){
+        curActionsCounter += 1;
+        $(".system").toggleClass("hidden");
+    });
+
+    $("#directActions").click(function (){
+        curActionsCounter += 1;
+        $(".system").addClass("hidden");
+        $(".user").addClass("hidden");
+        $(".directions").toggleClass("hidden");
+    });
+    $(".directions").click(function (){
+        curActionsCounter += 1;
+        $(".directions").toggleClass("hidden");
+    });
+
+    $("#userActions").click(function (){
+        curActionsCounter += 1;
+        $(".system").addClass("hidden");
+        $(".directions").addClass("hidden");
+        $(".user").toggleClass("hidden");
+    });
+    $(".user").click(function (){
+        curActionsCounter += 1;
+        $(".user").toggleClass("hidden");
+    });
+
+
+    let offset = $(".gotImage").offset();
+
+    let h = $(".gotImage").height()
+    let w = $(".gotImage").width()
+
+    console.log("w:" + w)
+    console.log("h:" + h)
+
+
+    let firstPointCoordinate;
+
+    let ready1 = 0;
+
+    let firstCoordinate = null
+
+    $(document).click(function (e){
+        curActionsCounter += 1;
+        console.log("document click");
+        let coordinateX = e.pageX - offset.left;
+        let coordinateY = e.pageY - offset.top;
+        console.log("(" + coordinateX + "; " + coordinateY + ")");
+
+        if(ready1 != 0){
+            if(allowedSelected){
+                if(allowed){
+                    if(ready1 == 3){
+                        $(".gotImage").addClass("readyToAdd");
+                    }
+                    else if(ready1 == 2){
+
+                        if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
+
+                            $(".selectorPoint").remove();
+                            $(".sector").remove();
+
+
+                            let p1 = "<div class='selectorPoint' style='top:"+ (coordinateY-2) +"px; left:"+ (coordinateX - 2) +"px;'></div>"
+                            firstCoordinate = [coordinateX, coordinateY];
+
+                            $(".gotImage").append(p1);
+
+
+                        }
+                        else{
+                            $(".gotImage").removeClass("readyToAdd");
+                            firstCoordinate = null;
+                            ready1 = 0;
+                        }
+
+                    }
+                    else if(ready1 == 1 && firstCoordinate != null){
+                        $(".selectorPoint").remove();
+
+                        if(0 < coordinateX && coordinateX < w && 0 < coordinateY && coordinateY < h){
+                            let areaWidth = Math.abs(coordinateX - firstCoordinate[0]);
+                            let areaHeight = Math.abs(coordinateY - firstCoordinate[1]);
+
+                            let x = Math.min(coordinateX, firstCoordinate[0]);
+                            let y = Math.min(coordinateY, firstCoordinate[1]);
+
+                            let areaDiv = "<div class='sector' style='top:"+ y +"px; left:"+ x +"px; height:"+ areaHeight +"px; width:"+ areaWidth +"px;'></div>"
+
+                            $(".gotImage").append(areaDiv);
+
+                            saveCoordinates(x, y, areaHeight, areaWidth);
+                            console.log("ok")
+                        }
+
+                        $(".gotImage").removeClass("readyToAdd");
+                        firstCoordinate = null;
+                    }
+
+
+                    ready1 -= 1;
+                    if (ready1 < 0){
+                        ready1 = 0;
+                    }
+
+                    console.log(ready1);
+                }
+                else{
+                    alert("Сначала выберите тепловизор.")
+                    ready1 = 0;
+                }
+            }
+            else{
+                alert("Сначала выберите объект для изменения координат.")
+                ready1 = 0;
+            }
+        }
+    });
+
+
+    $("#newArea").click(function (){
+        curActionsCounter += 1;
+        ready1 = 3;
+        console.log("Ready to add")
+    });
+
+
+    function moveAndView(){
+        console.log(busy)
+        if(!busy){
+            busy = true;
+            console.log("setting busy to " + busy )
+            let bodyToGoto = {};
+            bodyToGoto["tiId"] = parseInt($(".active").attr('id'));
+            bodyToGoto["horizontal"] = parseFloat($('#horizontal').val())
+            bodyToGoto["vertical"] = parseFloat($('#vertical').val())
+            bodyToGoto["focusing"] = parseFloat($('#focusing').val())
+
+
+            console.log(JSON.stringify(bodyToGoto));
+
+            fetch("/gotoAndGetImage", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(bodyToGoto),
+            })
+            .then((response) => {
+                response.text().then(function (localData){
+                    if(localData == "doubleUsers"){
+                        alert(window.location.href)
+                        window.location.replace("doubleUsers");
+                    }
+                    currentData = JSON.parse(localData);
+                    console.log(localData)
+
+                    if(currentData["newUrl"] == 'error'){
+                        allowed = false;
+                        busy = false;
+                        //alert('Не удалось получить изображение');
+                        moveAndView()
+
+                    }
+                    else if(currentData["newUrl"] == 'errorBusy'){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Тепловизор занят. Не удалось подключиться к тепловизору.')
+                    }
+                    else if (currentData["newUrl"] == 'conError'){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Соединение с тепловизором не установлено.')
+                    }
+                    else if(currentData["status"] == 500){
+                        allowed = false;
+                        $('.gotImg').attr('src', 'img/disconnect.png')
+                        alert('Произошла ошибка. Попробуйте снова.')
+                    }
+                    else{
+                        allowed = true;
+                        console.log(currentData);
+
+                        $(".gotImg").attr("src", currentData["newUrl"]);
+
+                        console.log(currentData["newUrl"])
+
+                        $(".sector").remove();
+
+                        console.log("setting busy to " + busy )
+                    }
+                    busy = false;
+
+                });
+            })
+            .catch((error) => {
+                console.error('Error:', error)
+
+                busy = false
+                console.log("setting busy to " + busy )
+            })
+        }
+        else{
+            alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+        }
+    }
+
+    $('.change').each( function (){
+        $(this).change(function (){
+            last_command += 1;
+            if(waiting == false){
+                console.log('begin waiting');
+                wait_command(last_command);
+            }
+        });
+    });
+
+    $('.nav-tabs>.nav-item>.nav-link').each(
+        function () {
+            $(this).click(function (){
+                curActionsCounter += 1;
+                if(! busy){
+                    $(".gotImg").attr("src", "img/loading.gif")
+                    $(".sector").remove();
+                    $('#horizontal').val(0)
+                    $('#vertical').val(0)
+                    $('#focusing').val(800)
+                    moveAndView();
+                }
+                else{
+                    needChangeTab = false;
+                    alert("Предыдущая команда выполняется, дождитесь ее выполнения.")
+
+                }
+            })
+        })
+
+
+    $('.up').click(function (){
+        curActionsCounter += 1;
+        last_command += 1;
+        console.log("up");
+
+        $("#vertical").val(parseFloat($("#vertical").val()) + parseFloat($("#step").val()));
+        if(waiting == false){
+            console.log('begin waiting');
+            wait_command(last_command);
+        }
+
+
+    })
+    $('.down').click(function (){
+        curActionsCounter += 1;
+        last_command += 1;
+        console.log("down");
+        $("#vertical").val(parseFloat($("#vertical").val()) - parseFloat($("#step").val()));
+        if(waiting == false){
+            console.log('begin waiting');
+            wait_command(last_command);
+        }
+    })
+    $('.left').click(function (){
+        curActionsCounter += 1;
+        last_command += 1;
+        console.log("left");
+
+        let newVal = parseFloat($("#horizontal").val()) - parseFloat($("#step").val())
+        if(newVal< 0){
+            newVal += 360;
+        }
+        if(newVal>= 360){
+            newVal -= 360;
+        }
+
+        $("#horizontal").val(newVal);
+        if(waiting == false){
+            console.log('begin waiting');
+            wait_command(last_command);
+        }
+    })
+    $('.right').click(function (){
+        curActionsCounter += 1;
+        last_command += 1;
+        console.log("right");
+
+        let newVal = parseFloat($("#horizontal").val()) + parseFloat($("#step").val())
+        if(newVal< 0){
+            newVal += 360;
+        }
+        if(newVal>= 360){
+            newVal -= 360;
+        }
+
+        $("#horizontal").val(newVal);
+        if(waiting == false){
+            console.log('begin waiting');
+            wait_command(last_command);
+        }
+    });
+
+    $('#logout').click(function (){
+        curActionsCounter += 1;
+        fetch("/setTINotInUse", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+    })
+
+
+    $("#autoFocusing").click(function (){
+        curActionsCounter += 1;
+        if(!busy){
+            busy = true;
+            $(".gotImg").attr("src", "img/loading.gif");
+            fetch("/autoFocusing?thermalImagerId=" + parseInt($(".active").attr('id')), { //ID!!!
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: null,
+            })
+                .then((response) => {
+
+                    response.text().then(function (data){
+                        if(data == "doubleUsers"){
+                            alert(window.location.href)
+                            window.location.replace("doubleUsers");
+                        }
+                        currentData = JSON.parse(data);
+                        console.log(currentData['message']);
+
+                        if(currentData['message'])
+                            alert(currentData['message'])
+                        if(currentData["newUrl"] == 'conError'){
+                            $('.gotImg').attr('src', 'img/disconnect.png')
+                        }
+                        else{
+                            $(".gotImg").attr("src", currentData["newUrl"]);
+                            $("#focusing").val(currentData["focus"]);
+                        }
+
+                        $(".sector").remove();
+
+                        busy = false;
+                        console.log("setting busy to " + busy )
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    busy = false;
+                    console.log("setting busy to " + busy )
+                });
+
+        }
+        else {
+            alert('Соединение с тепловизором не установлено.')
+        }
+
+    })
+
+    $("#refreshConnections").click(function (){
+        curActionsCounter += 1;
+        fetch ("/resetConnections", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+    $("#reboot").click(function (){
+        curActionsCounter += 1;
+        alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
+        fetch ("/rebootTI", {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+
+    $(".messageCross").each(function (){
+        $(this).click(function (){
+            curActionsCounter += 1;
+            $(this).parent().addClass("hidden");
+        });
+    });
+
+    $(document).ready(function() {
+        console.log(busy)
+        moveAndView()
+    })
+
+
+    $('.nav-tabs>.nav-item>.nav-link').each(
+        function () {
+            $(this).click(function (){
+                curActionsCounter += 1;
+                console.log("need change: " + needChangeTab)
+                if(needChangeTab){
+                    $('.nav-tabs>.nav-item>.nav-link').each(
+                        function () {
+                            $(this).removeClass('active');
+                        }
+                    )
+                    $(this).addClass('active')
+                }
+                else{
+                    needChangeTab = true;
+                }
+
+            });
+        }
+    )
+
+    function setUserNotGrabbedTI(){
+        fetch("/setNotBusy", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+    }
+
+    window.onunload = function (){
+        setUserNotGrabbedTI();
+    }
+
+    setInterval(function(){
+        if(curActionsCounter == prevActionsCounter){
+            setUserNotGrabbedTI();
+            window.location.replace("/notActive");
+        }
+        else{
+            prevActionsCounter = curActionsCounter;
+        }
+
+    }, 1200000);//300000 - 5 мин
+</script>
+</html>

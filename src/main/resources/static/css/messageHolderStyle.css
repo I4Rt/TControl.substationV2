@@ -1,0 +1,49 @@
+.messageHolder{
+    position: fixed;
+    top: 30px;
+    right: 10px;
+    width: 200px;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    justify-content: flex-start;
+    gap: 10px;
+    z-index: 1000000;
+}
+.message{
+    padding: 10px;
+    border: 2px solid;
+    border-radius: 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.red{
+    border-color: #772222;
+    background-color: #fc6464;
+    color: #772222;
+}
+.green{
+    border-color: #417722;
+    background-color: #67e85b;
+    color: #417722;
+}
+
+.text{
+    overflow-x: hidden;
+    text-wrap: revert;
+    width: 80%;
+    height:auto;
+    font-weight: bold;
+}
+.messageCross{
+    width: 10%;
+    height:auto;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+}
