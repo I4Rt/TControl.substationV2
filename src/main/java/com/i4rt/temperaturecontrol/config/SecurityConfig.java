@@ -29,6 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeHttpRequests((requests) -> requests
                 .antMatchers("/adding", "/saveArea", "/register", "/registerUser", "/usersList", "/deleteArea").hasAnyAuthority("ADMIN")
                 .antMatchers("/main", "/saveArea", "/area", "/adding").authenticated()
+                .antMatchers("/img/Rusal.svg", "/img/SibFU.png").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin((form) -> form

@@ -104,6 +104,7 @@
 
     let needShowTemperature = true;
     let needShowPower = true;
+    let needShowPredicted= true;
 
 
     let current_id = 0;
@@ -234,9 +235,9 @@
             },
             body: dataToSend,
         })
-        .then((response) => {
-            response.text().then(function (data){
-                currentData = JSON.parse(data);
+            .then((response) => {
+                response.text().then(function (data){
+                    currentData = JSON.parse(data);
                     if(needUpdate) {
                         fetch("/getDataToUpdate", {
                             method: "POST",
@@ -245,33 +246,33 @@
                             },
                             body: dataToSend,
                         })
-                        .then((response) => {
-                            response.text().then(function (data) {
-                                let curData = JSON.parse(data);
-                                console.log(curData['imagesNames'])
-                                currentData['imagesNames'] = curData['imagesNames']
+                            .then((response) => {
+                                response.text().then(function (data) {
+                                    let curData = JSON.parse(data);
+                                    console.log(curData['imagesNames'])
+                                    currentData['imagesNames'] = curData['imagesNames']
 
-                                curTimeArray = curData['time'];
-                                curTemperatureArray = curData['temperature'];
-                                curWeatherArray = curData['weather'];
-                                curPowerArray = curData['power'];
-                                curPredictedArray = curData['predicted'];
+                                    curTimeArray = curData['time'];
+                                    curTemperatureArray = curData['temperature'];
+                                    curWeatherArray = curData['weather'];
+                                    curPowerArray = curData['power'];
+                                    curPredictedArray = curData['predicted'];
 
-                                newUpdatePageStatistics();
-                                updateImages()
+                                    newUpdatePageStatistics();
+                                    updateImages()
+                                })
                             })
-                        })
-                        .catch((error) => {
+                            .catch((error) => {
                                 console.error('Error:', error);
-                        });
+                            });
                     }
                     updatePageStatisticsTemperature()
                 })
 
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
     function updatePageStatisticsTemperature(){
         $(".loading").addClass("hidden");
@@ -402,107 +403,41 @@
 
     function newUpdatePageStatistics(){
         const myLabels = curTimeArray;
-        let myDatasets;
-        if(needShowTemperature && needShowPower){
+        let myDatasets = [];
+        myDatasets.push({
+            label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
+            yAxisID: 'yAxisLeft',
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data:  curTemperatureArray,
+        });
 
-            myDatasets = [
-                {
-                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data:  curTemperatureArray,
-                },
-                {
-                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255,251,0)',
-                    borderColor: 'rgb(255,251,0)',
-                    data:  curPredictedArray,
-                },
-                {
-                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(99, 132, 255)',
-                    borderColor: 'rgb(99, 132, 255)',
-                    data:  curWeatherArray,
-                },
-                {
-                    label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
-                    yAxisID: 'yAxisRight',
-                    backgroundColor: 'rgb(99, 255, 132)',
-                    borderColor: 'rgb(99, 255, 132)',
-                    data:  curPowerArray,
-                }
-            ];
+        if (needShowTemperature){
+            myDatasets.push({
+                label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха",
+                yAxisID: 'yAxisLeft',
+                backgroundColor: 'rgb(99, 132, 255)',
+                borderColor: 'rgb(99, 132, 255)',
+                data:  curWeatherArray,
+            });
         }
-        else if(needShowTemperature){
-            myDatasets = [
-                {
-                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data:  curTemperatureArray,
-                },
-                {
-                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255,251,0)',
-                    borderColor: 'rgb(255,251,0)',
-                    data:  curPredictedArray,
-                },
-                {
-                    label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха" ,
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(99, 132, 255)',
-                    borderColor: 'rgb(99, 132, 255)',
-                    data:  curWeatherArray,
-                }
-            ];
+        if (needShowPower){
+            myDatasets.push({
+                label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
+                yAxisID: 'yAxisRight',
+                backgroundColor: 'rgb(99, 255, 132)',
+                borderColor: 'rgb(99, 255, 132)',
+                data:  curPowerArray,
+            });
         }
-        else if(needShowPower){
-            myDatasets = [
-                {
-                    label: needUpdate ? "Данные температуры за 50 измерений" : "Данные температуры объекта контроля" ,
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data:  curTemperatureArray,
-                },
-                {
-                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255,251,0)',
-                    borderColor: 'rgb(255,251,0)',
-                    data:  curPredictedArray,
-                },
-                {
-                    label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
-                    yAxisID: 'yAxisRight',
-                    backgroundColor: 'rgb(99, 255, 132)',
-                    borderColor: 'rgb(99, 255, 132)',
-                    data:  curPowerArray,
-                }
-            ];
-        }
-        else{
-            myDatasets = [
-                {
-                    label: needUpdate ? "Данные температур за 50 измерений" : "Данные температуры объекта контроля" ,
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data:  curTemperatureArray,
-                },
-                {
-                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
-                    yAxisID: 'yAxisLeft',
-                    backgroundColor: 'rgb(255,251,0)',
-                    borderColor: 'rgb(255,251,0)',
-                    data:  curPredictedArray,
-                },
-            ];
+        if (needShowPredicted){
+            myDatasets.push({
+                label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
+                yAxisID: 'yAxisLeft',
+                backgroundColor: 'rgb(255,251,0)',
+                borderColor: 'rgb(255,251,0)',
+                data:  curPredictedArray,
+            })
         }
 
         const myData = {
@@ -587,192 +522,193 @@
     }, 3000);
 </script>
 <body>
-    <div class="imageBG hidden">
-        <div style="position: relative;">
-            <img src="imgData/7_11/Андрей/18_9_39.jpg" class="openedImage">
-            <div class="sector" th:style="${sector}"></div>
-        </div>
-
-    </div>
-    <div class="topBar">
-        <div class="buttonsBar">
-            <text id="sysActions">Система</text>
-            <text id="directActions">Управление</text>
-            <text id="userActions">Пользователь</text>
-        </div>
-        <div class="centerBar">
-            <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
-            <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
-            <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
-            <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
-        </div>
-        <div class="weatherBar">
-            <text>Обновление</text>
-            <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
-        </div>
+<div class="imageBG hidden">
+    <div style="position: relative;">
+        <img src="imgData/7_11/Андрей/18_9_39.jpg" class="openedImage">
+        <div class="sector" th:style="${sector}"></div>
     </div>
 
-    <div class="main">
-        <div class="myRow noGap">
-            <div class="myColumn seventy">
-                <div class="chart" style="display: flex;flex-direction: row;justify-content: center;">
-                    <img src="img/loading.gif" class="loading" style="justify-self: center; height: 400px;">
-                    <canvas id="myChart" class="hidden"></canvas>
-                </div>
+</div>
+<div class="topBar">
+    <div class="buttonsBar">
+        <text id="sysActions">Система</text>
+        <text id="directActions">Управление</text>
+        <text id="userActions">Пользователь</text>
+    </div>
+    <div class="centerBar">
+        <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
+        <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
+        <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
+        <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
+    </div>
+    <div class="weatherBar">
+        <text>Обновление</text>
+        <img src="img/loading.gif" class="loading" style="width: 20px; height: 20px;">
+    </div>
+</div>
 
-                <div class="myColumn">
-                    <div class="myRow imagesRow" style="width: 800px; justify-content: flex-start">
+<div class="main">
+    <div class="myRow noGap">
+        <div class="myColumn seventy">
+            <div class="chart" style="display: flex;flex-direction: row;justify-content: center;">
+                <img src="img/loading.gif" class="loading" style="justify-self: center; height: 400px;">
+                <canvas id="myChart" class="hidden"></canvas>
+            </div>
 
-                    </div>
-                </div>
+            <div class="myColumn">
+                <div class="myRow imagesRow" style="width: 800px; justify-content: flex-start">
 
-                <div class="myColumn">
-                    <text style="width: 800px">Отображения</text>
-                </div>
-                <div class="myColumn">
-                    <div class="myRow" style="width: 800px; justify-content: flex-start">
-                        <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
-                        <button class="basicButton" style="width: fit-content; font-size: 16px" id="power">Нагрузки</button>
-                    </div>
-                </div>
-
-                <div class="myColumn">
-                    <text style="width: 800px">Настройка графика</text>
-                </div>
-                <div class="myColumn">
-                    <div class="myRow" style="width: 800px;">
-                        <text>C </text>
-                        <text>Число:</text>
-                        <input id="beginDay" type="date">
-                        <text>Время:</text>
-                        <input id="beginTime" type="time">
-                    </div>
-                    <div class="myRow" style="width: 800px;">
-                        <text>ПО </text>
-                        <text>Число:</text>
-                        <input id="endDay" type="date">
-                        <text>Время:</text>
-                        <input id="endTime" type="time">
-                    </div>
-                    <div class="myRow" style="width: 800px;">
-                        <button id="makeChartRequest" class="basicButton" style="width: calc(50% - 10px)">Сформировать график</button>
-                        <button id="beginUpdate" class="basicButton" style="width: calc(50% - 10px)">Возобновить мониторинг</button>
-                    </div>
                 </div>
             </div>
-            <div class="myColumn thirty">
-                <div class="myRow start hidden"><text id="curId" th:text="${controlObject.id}"></text></div>
-                <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
-                <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
-                <div class="myRow "><text style="width: 55%">Критическая разность температур, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
-                <div class="myRow "><text style="width: 55%">Допустимое отличие от модели, °C: </text> <input class="maxPredictedDifference" type="number" title="Допустимое отличие от модели" th:value="${controlObject.maxPredictedDifference}" ></div>
-                <div class="myRow "><text style="width: 55%">Зона контроля МИП: </text>
-                    <select name="MIPChanel" id="MIPChanel" th:field="${controlObject.voltageMeasurementChannel}" required>
-                        <option th:value="'A'" th:text="A">A</option>
-                        <option th:value="'B'" th:text="B">B</option>
-                        <option th:value="'C'" th:text="C">C</option>
-                    </select>
-                </div>
-                <div class="myRow ">
-                    <text>Сигнализация: </text>
-                    <div><label class="switch"><input onclick="setMute()" id="sliderCheckbox" type="checkbox" checked><span class="slider round"></span></label></div>
-                </div>
-                <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
-                <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}">Обновление</b></div></div>
 
-                <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
-                <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
-                <a style="width: 100%" id="reportLink" ><button class="basicButton">Сформировать отчет</button></a>
-                <button class="delButton">Удалить</button>
-                <h5 style="align-self: flex-start; margin-bottom: 2px">Комментарии</h5>
-                <div class="log" style="padding: 5px; border: 1px solid #262626; display: flex; gap: 5px; flex-direction: column; width: 100%;height: 240px;overflow-y: scroll;"></div>
-                <div class="newMessage">
-                    <input class="inputText" type="text" id="record">
-                    <button class="sendButton" onclick="addRecord()">↲</button>
+            <div class="myColumn">
+                <text style="width: 800px">Отображения</text>
+            </div>
+            <div class="myColumn">
+                <div class="myRow" style="width: 800px; justify-content: flex-start">
+                    <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
+                    <button class="basicButton" style="width: fit-content; font-size: 16px" id="power">Нагрузки</button>
+                    <button class="basicButton" style="width: fit-content; font-size: 16px" id="predicted">Прогноз</button>
+                </div>
+            </div>
+
+            <div class="myColumn">
+                <text style="width: 800px">Настройка графика</text>
+            </div>
+            <div class="myColumn">
+                <div class="myRow" style="width: 800px;">
+                    <text>C </text>
+                    <text>Число:</text>
+                    <input id="beginDay" type="date">
+                    <text>Время:</text>
+                    <input id="beginTime" type="time">
+                </div>
+                <div class="myRow" style="width: 800px;">
+                    <text>ПО </text>
+                    <text>Число:</text>
+                    <input id="endDay" type="date">
+                    <text>Время:</text>
+                    <input id="endTime" type="time">
+                </div>
+                <div class="myRow" style="width: 800px;">
+                    <button id="makeChartRequest" class="basicButton" style="width: calc(50% - 10px)">Сформировать график</button>
+                    <button id="beginUpdate" class="basicButton" style="width: calc(50% - 10px)">Возобновить мониторинг</button>
                 </div>
             </div>
         </div>
-
-    </div>
-
-    <div class="dropdown system hidden">
-        <a href="/main">Главная страница контроля</a>
-        <a href="/newArea">Создать новый объект контроля</a>
-        <a href="/report">Сформировать отчет</a>
-    </div>
-    <div class="dropdown directions hidden">
-        <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
-        <a id="reboot">Перезапустить тепловизоры</a>
-    </div>
-    <div class="dropdown user hidden">
-        <div class="myColumn">
-            <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
-            <div class="myRow" style="justify-content: flex-start">
-                <b th:utext="${user.getName}"></b>
-                <b th:utext="${user.getSurname}"></b>
+        <div class="myColumn thirty">
+            <div class="myRow start hidden"><text id="curId" th:text="${controlObject.id}"></text></div>
+            <div class="myRow "><text>Название области: </text> <input class="name" type="text" title="Название" th:value="${controlObject.name}" ></div>
+            <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
+            <div class="myRow "><text style="width: 55%">Критическая разность температур, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
+            <div class="myRow "><text style="width: 55%">Допустимое отличие от модели, °C: </text> <input class="maxPredictedDifference" type="number" title="Допустимое отличие от модели" th:value="${controlObject.maxPredictedDifference}" ></div>
+            <div class="myRow "><text style="width: 55%">Зона контроля МИП: </text>
+                <select name="MIPChanel" id="MIPChanel" th:field="${controlObject.voltageMeasurementChannel}" required>
+                    <option th:value="'A'" th:text="A">A</option>
+                    <option th:value="'B'" th:text="B">B</option>
+                    <option th:value="'C'" th:text="C">C</option>
+                </select>
             </div>
-            <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
-            <div class="myRow" th:utext="${user.getRole}">
-                <b th:utext="${user.getRole}"></b>
+            <div class="myRow ">
+                <text>Сигнализация: </text>
+                <div><label class="switch"><input onclick="setMute()" id="sliderCheckbox" type="checkbox" checked><span class="slider round"></span></label></div>
+            </div>
+            <div class="myRow "><text>Координаты: </text><b th:utext="${coordinatesString}"></b></div>
+            <div class="myRow start alignCenter"><text>Температура: </text><div class="tempHolder"><div id="curTemperatureMarker" class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div><b id="curTemperatureLine" class="inline" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}">Обновление</b></div></div>
+
+            <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
+            <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
+            <a style="width: 100%" id="reportLink" ><button class="basicButton">Сформировать отчет</button></a>
+            <button class="delButton">Удалить</button>
+            <h5 style="align-self: flex-start; margin-bottom: 2px">Комментарии</h5>
+            <div class="log" style="padding: 5px; border: 1px solid #262626; display: flex; gap: 5px; flex-direction: column; width: 100%;height: 240px;overflow-y: scroll;"></div>
+            <div class="newMessage">
+                <input class="inputText" type="text" id="record">
+                <button class="sendButton" onclick="addRecord()">↲</button>
             </div>
         </div>
-        <hr/>
-        <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
-        <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
-        <a href="/user">Изменить пароль</a>
-        <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
     </div>
 
-    <div class="messageHolder">
-        <div class="message green hidden" id="ti1_ok">
-            <div class="text green">Подключение к тепловизору 1 восстановлено</div>
-            <div class="messageCross green">X</div>
+</div>
+
+<div class="dropdown system hidden">
+    <a href="/main">Главная страница контроля</a>
+    <a href="/newArea">Создать новый объект контроля</a>
+    <a href="/report">Сформировать отчет</a>
+</div>
+<div class="dropdown directions hidden">
+    <a id="refreshConnections">Перезапустить <br>подключения сканеров</a>
+    <a id="reboot">Перезапустить тепловизоры</a>
+</div>
+<div class="dropdown user hidden">
+    <div class="myColumn">
+        <div class="myRow"><text style="font-size: 11px">Текущий пользователь</text></div>
+        <div class="myRow" style="justify-content: flex-start">
+            <b th:utext="${user.getName}"></b>
+            <b th:utext="${user.getSurname}"></b>
         </div>
-        <div class="message green hidden" id="ti2_ok">
-            <div class="text green">Подключение к тепловизору 2 восстановлено</div>
-            <div class="messageCross green">X</div>
-        </div>
-        <div class="message green hidden" id="ti3_ok">
-            <div class="text green">Подключение к тепловизору 3 восстановлено</div>
-            <div class="messageCross green">X</div>
-        </div>
-        <div class="message green hidden" id="ti4_ok">
-            <div class="text green">Подключение к тепловизору 4 восстановлено</div>
-            <div class="messageCross green">X</div>
-        </div>
-        <div class="message green hidden" id="ws_ok">
-            <div class="text green">Подключение к метеостанции восстановлено</div>
-            <div class="messageCross green">X</div>
-        </div>
-        <div class="message green hidden" id="mip_ok">
-            <div class="text green">Подключение к MIP</div>
-            <div class="messageCross green">X</div>
-        </div>
-        <div class="message red hidden" id="ti1_error">
-            <div class="text red">Отсутствует подключение к тепловизору 1</div>
-            <div class="messageCross red">X</div>
-        </div>
-        <div class="message red hidden" id="ti2_error">
-            <div class="text red">Отсутствует подключение к тепловизору 2</div>
-            <div class="messageCross red">X</div>
-        </div>
-        <div class="message red hidden" id="ti3_error">
-            <div class="text red">Отсутствует подключение к тепловизору 3</div>
-            <div class="messageCross red">X</div>
-        </div>
-        <div class="message red hidden" id="ti4_error">
-            <div class="text red">Отсутствует подключение к тепловизору 4</div>
-            <div class="messageCross red">X</div>
-        </div>
-        <div class="message red hidden" id="ws_error">
-            <div class="text red">Отсутствует подключение к метеостанции</div>
-            <div class="messageCross red">X</div>
-        </div>
-        <div class="message red hidden" id="mip_error">
-            <div class="text red">Отсутствует подключение к МИП</div>
-            <div class="messageCross red">X</div>
+        <div class="myRow"><text style="font-size: 11px">Права доступа</text></div>
+        <div class="myRow" th:utext="${user.getRole}">
+            <b th:utext="${user.getRole}"></b>
         </div>
     </div>
+    <hr/>
+    <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
+    <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
+    <a href="/user">Изменить пароль</a>
+    <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+</div>
+
+<div class="messageHolder">
+    <div class="message green hidden" id="ti1_ok">
+        <div class="text green">Подключение к тепловизору 1 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti2_ok">
+        <div class="text green">Подключение к тепловизору 2 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti3_ok">
+        <div class="text green">Подключение к тепловизору 3 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ti4_ok">
+        <div class="text green">Подключение к тепловизору 4 восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="ws_ok">
+        <div class="text green">Подключение к метеостанции восстановлено</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message green hidden" id="mip_ok">
+        <div class="text green">Подключение к MIP</div>
+        <div class="messageCross green">X</div>
+    </div>
+    <div class="message red hidden" id="ti1_error">
+        <div class="text red">Отсутствует подключение к тепловизору 1</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti2_error">
+        <div class="text red">Отсутствует подключение к тепловизору 2</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti3_error">
+        <div class="text red">Отсутствует подключение к тепловизору 3</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ti4_error">
+        <div class="text red">Отсутствует подключение к тепловизору 4</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="ws_error">
+        <div class="text red">Отсутствует подключение к метеостанции</div>
+        <div class="messageCross red">X</div>
+    </div>
+    <div class="message red hidden" id="mip_error">
+        <div class="text red">Отсутствует подключение к МИП</div>
+        <div class="messageCross red">X</div>
+    </div>
+</div>
 </body>
 
 <script src="js/jquery.min.js"></script>
@@ -883,7 +819,7 @@
                 "\"MIPChanel\": " + $("#MIPChanel").val() +
                 "}";
 
-                console.log(currentDataInside);
+            console.log(currentDataInside);
             fetch("/saveArea", {
                 method: "POST",
                 headers: {
@@ -891,27 +827,27 @@
                 },
                 body: currentDataInside,
             })
-            .then((response) => {
-                response.text().then(function (data){
-                    if(data[0] == '<'){
-                        window.location.replace("403");
-                    }
-                    else{
-                        let temp = JSON.parse(data);
-
-                        if(temp["message"].length < 20){
-                            currentData["temperatureClass"] = temp["temperatureClass"];
-                            updatePageStatisticsTemperature();
+                .then((response) => {
+                    response.text().then(function (data){
+                        if(data[0] == '<'){
+                            window.location.replace("403");
                         }
-                        alert(temp["message"])
-                    }
+                        else{
+                            let temp = JSON.parse(data);
 
+                            if(temp["message"].length < 20){
+                                currentData["temperatureClass"] = temp["temperatureClass"];
+                                updatePageStatisticsTemperature();
+                            }
+                            alert(temp["message"])
+                        }
+
+                    });
+
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
                 });
-
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
         }
         else{
             alert("Введите значения для всех полей!")
@@ -943,12 +879,16 @@
     });
 
     $('#weatherTemperature').click(function (){
-       needShowTemperature = !needShowTemperature;
-       newUpdatePageStatistics();
+        needShowTemperature = !needShowTemperature;
+        newUpdatePageStatistics();
     });
 
     $('#power').click(function (){
         needShowPower = !needShowPower;
+        newUpdatePageStatistics();
+    });
+    $('#predicted').click(function (){
+        needShowPredicted = !needShowPredicted;
         newUpdatePageStatistics();
     });
 
@@ -965,14 +905,14 @@
             },
             body: null,
         })
-        .then((response) => {
-            response.text().then(function (data){
-                alert(data)
+            .then((response) => {
+                response.text().then(function (data){
+                    alert(data)
+                })
             })
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     });
     $("#reboot").click(function (){
         alert('Инициализирована перезагрузка тепловизоров. Данная операция занимает длительное время. По ее окончании вы будете уведомлены.')
@@ -1035,9 +975,9 @@
             },
             body: JSON.stringify(data),
         })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
 
     function updateMute(){
