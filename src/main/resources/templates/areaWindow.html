@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -118,6 +117,7 @@
     let curTimeArray;
     let curWeatherArray;
     let curPowerArray;
+    let curPredictedArray;
     let curTemperatureArray;
 
     function updateLogRecords(){
@@ -255,6 +255,7 @@
                                 curTemperatureArray = curData['temperature'];
                                 curWeatherArray = curData['weather'];
                                 curPowerArray = curData['power'];
+                                curPredictedArray = curData['predicted'];
 
                                 newUpdatePageStatistics();
                                 updateImages()
@@ -274,6 +275,7 @@
     }
     function updatePageStatisticsTemperature(){
         $(".loading").addClass("hidden");
+        $("#myChart").removeClass("hidden");
 
         $("#curTemperatureLine").removeClass("noData");
         $("#curTemperatureLine").removeClass("normal");
@@ -412,6 +414,13 @@
                     data:  curTemperatureArray,
                 },
                 {
+                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255,251,0)',
+                    borderColor: 'rgb(255,251,0)',
+                    data:  curPredictedArray,
+                },
+                {
                     label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха",
                     yAxisID: 'yAxisLeft',
                     backgroundColor: 'rgb(99, 132, 255)',
@@ -437,6 +446,13 @@
                     data:  curTemperatureArray,
                 },
                 {
+                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255,251,0)',
+                    borderColor: 'rgb(255,251,0)',
+                    data:  curPredictedArray,
+                },
+                {
                     label: needUpdate ? "Данные температуры воздуха за 50 измерений" : "Данные температуры воздуха" ,
                     yAxisID: 'yAxisLeft',
                     backgroundColor: 'rgb(99, 132, 255)',
@@ -455,6 +471,13 @@
                     data:  curTemperatureArray,
                 },
                 {
+                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255,251,0)',
+                    borderColor: 'rgb(255,251,0)',
+                    data:  curPredictedArray,
+                },
+                {
                     label: needUpdate ? "Данные мощности за 50 измерений" : "Данные мощности",
                     yAxisID: 'yAxisRight',
                     backgroundColor: 'rgb(99, 255, 132)',
@@ -471,7 +494,14 @@
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
                     data:  curTemperatureArray,
-                }
+                },
+                {
+                    label: needUpdate ? "Данные прогноза температуры за 50 измерений" : "Данные прогноза температуры объекта контроля",
+                    yAxisID: 'yAxisLeft',
+                    backgroundColor: 'rgb(255,251,0)',
+                    borderColor: 'rgb(255,251,0)',
+                    data:  curPredictedArray,
+                },
             ];
         }
 
@@ -585,46 +615,46 @@
     <div class="main">
         <div class="myRow noGap">
             <div class="myColumn seventy">
-                <div class="chart">
-                    <img src="img/loading.gif" class="loading" style="height: 300px;">
-                    <canvas id="myChart"></canvas>
+                <div class="chart" style="display: flex;flex-direction: row;justify-content: center;">
+                    <img src="img/loading.gif" class="loading" style="justify-self: center; height: 400px;">
+                    <canvas id="myChart" class="hidden"></canvas>
                 </div>
 
                 <div class="myColumn">
-                    <div class="myRow imagesRow" style="width: 650px; justify-content: flex-start">
+                    <div class="myRow imagesRow" style="width: 800px; justify-content: flex-start">
 
                     </div>
                 </div>
 
                 <div class="myColumn">
-                    <text style="width: 650px">Отображения</text>
+                    <text style="width: 800px">Отображения</text>
                 </div>
                 <div class="myColumn">
-                    <div class="myRow" style="width: 650px; justify-content: flex-start">
+                    <div class="myRow" style="width: 800px; justify-content: flex-start">
                         <button class="basicButton" style="width: fit-content; font-size: 16px" id="weatherTemperature">Температура воздуха</button>
                         <button class="basicButton" style="width: fit-content; font-size: 16px" id="power">Нагрузки</button>
                     </div>
                 </div>
 
                 <div class="myColumn">
-                    <text style="width: 650px">Настройка графика</text>
+                    <text style="width: 800px">Настройка графика</text>
                 </div>
                 <div class="myColumn">
-                    <div class="myRow" style="width: 650px;">
+                    <div class="myRow" style="width: 800px;">
                         <text>C </text>
                         <text>Число:</text>
                         <input id="beginDay" type="date">
                         <text>Время:</text>
                         <input id="beginTime" type="time">
                     </div>
-                    <div class="myRow" style="width: 650px;">
+                    <div class="myRow" style="width: 800px;">
                         <text>ПО </text>
                         <text>Число:</text>
                         <input id="endDay" type="date">
                         <text>Время:</text>
                         <input id="endTime" type="time">
                     </div>
-                    <div class="myRow" style="width: 650px;">
+                    <div class="myRow" style="width: 800px;">
                         <button id="makeChartRequest" class="basicButton" style="width: calc(50% - 10px)">Сформировать график</button>
                         <button id="beginUpdate" class="basicButton" style="width: calc(50% - 10px)">Возобновить мониторинг</button>
                     </div>
@@ -800,7 +830,7 @@
                     curTemperatureArray = curData['temperature'];
                     curWeatherArray = curData['weather'];
                     curPowerArray = curData['power'];
-
+                    curPredictedArray = curData['predicted'];
                     newUpdatePageStatistics();
                     updateImages()
                 })

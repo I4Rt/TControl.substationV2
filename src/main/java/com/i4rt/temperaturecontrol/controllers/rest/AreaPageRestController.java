@@ -125,25 +125,45 @@ public class AreaPageRestController {
         Integer limit = data.getInt("limit");
 
 
-        List<Measurement> curMeasurements = measurementRepo.getMeasurementByDatetime(controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getId(), limit);
+        ArrayList<CloseData> closeDataList = closeDataRepo.getCloseDataLimited(searchControlObjectId, limit);
 
-        Map<String, Object> preparedToSendData = new HashMap<>();
+        HashMap<String, ArrayList> results2 = new HashMap<>();
+        results2.put("temperature", new ArrayList<Double>());
+        results2.put("weather", new ArrayList<Double>());
+        results2.put("power", new ArrayList<Double>());
+        results2.put("predicted", new ArrayList<Double>());
+        results2.put("time", new ArrayList<Date>());
+        for(CloseData closeData : closeDataList){
+            results2.get("temperature").add(closeData.getNodeTemperature());
+            results2.get("weather").add(closeData.getTemperature());
+            results2.get("power").add(closeData.getPower());
+            results2.get("predicted").add(closeData.getPredictedTemperature());
+            results2.get("time").add(closeData.getDatetimeStr());
 
-        preparedToSendData.put("time", new ArrayList<String>());
-        preparedToSendData.put("temperature", new ArrayList<Double>());
-        System.out.println(controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getTemperatureClass() + "\n\n\n\n\n");
-        preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getTemperatureClass());
-
-        for(Measurement measurement: curMeasurements){
-            ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
-            ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
         }
 
 
 
 
+//        List<Measurement> curMeasurements = measurementRepo.getMeasurementByDatetime(controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getId(), limit);
+//
+//        Map<String, Object> preparedToSendData = new HashMap<>();
+//
+//        preparedToSendData.put("time", new ArrayList<String>());
+//        preparedToSendData.put("temperature", new ArrayList<Double>());
+//        System.out.println(controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getTemperatureClass() + "\n\n\n\n\n");
+//        preparedToSendData.put("temperatureClass", controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getTemperatureClass());
+//
+//        for(Measurement measurement: curMeasurements){
+//            ((ArrayList<String>)preparedToSendData.get("time")).add(measurement.getDatetime().toString());
+//            ((ArrayList<Double>)preparedToSendData.get("temperature")).add(measurement.getTemperature());
+//        }
 
-        String jsonStringToSend = JSONObject.valueToString(preparedToSendData);
+
+
+
+        
+        String jsonStringToSend = JSONObject.valueToString(results2);
 
         //System.out.println("temp_data: " + jsonStringToSend);
 
@@ -155,15 +175,30 @@ public class AreaPageRestController {
         Long searchControlObjectId = data.getLong("id");
         Integer limit = data.getInt("limit");
 
-        Map<String, Object> result =  MeasurementsDisplayPrepareService.getPreparedMeasurementsArraysLimited(
-                controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getId(), limit);
-        // getting images names:
-        result.put("imagesNames", new ArrayList<String>());
+        ArrayList<CloseData> closeDataList = closeDataRepo.getCloseDataLimited(searchControlObjectId, limit);
 
-        if(((ArrayList<Date>) result.get("time")).size() > 1){
+        HashMap<String, ArrayList> results2 = new HashMap<>();
+        results2.put("temperature", new ArrayList<Double>());
+        results2.put("weather", new ArrayList<Double>());
+        results2.put("power", new ArrayList<Double>());
+        results2.put("predicted", new ArrayList<Double>());
+        results2.put("time", new ArrayList<String>());
+        results2.put("timeReal", new ArrayList<Date>());
+        for(CloseData closeData : closeDataList){
+            results2.get("temperature").add(closeData.getNodeTemperature());
+            results2.get("weather").add(closeData.getTemperature());
+            results2.get("power").add(closeData.getPower());
+            results2.get("predicted").add(closeData.getPredictedTemperature());
+            results2.get("time").add(closeData.getDatetimeStr());
+            results2.get("timeReal").add(closeData.getDatetime());
+        }
+        // getting images names:
+        results2.put("imagesNames", new ArrayList<String>());
+
+        if(((ArrayList<Date>) results2.get("timeReal")).size() > 1){
             System.out.println("dates found");
-            Date beginningDate =((ArrayList<Date>) result.get("time")).get(0);
-            Date endingDate =  ((ArrayList<Date>) result.get("time")).get(((ArrayList<Date>) result.get("time")).size() - 1);
+            Date beginningDate =((ArrayList<Date>) results2.get("timeReal")).get(0);
+            Date endingDate =  ((ArrayList<Date>) results2.get("timeReal")).get(((ArrayList<Date>) results2.get("timeReal")).size() - 1);
 
             System.out.println("date " + beginningDate + " --> " + endingDate);
 
@@ -197,7 +232,7 @@ public class AreaPageRestController {
                             System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0));
                             if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
                                 //System.out.println("append image");
-                                ((ArrayList<String>)result.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+                                ((ArrayList<String>)results2.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
                             }
                         }
 
@@ -206,10 +241,10 @@ public class AreaPageRestController {
                 }
             }
         }
+        results2.remove("timeReal");
+        System.out.println("images " + JSONObject.valueToString(results2));
 
-        System.out.println("images " + JSONObject.valueToString(result));
-
-        return JSONObject.valueToString(result);
+        return JSONObject.valueToString(results2);
     }
 
 
@@ -271,20 +306,36 @@ public class AreaPageRestController {
             Date beginningDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(begin);
             Date endingDate = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss").parse(end);
 
+            ArrayList<CloseData> closeDataList = closeDataRepo.getCloseDataByDatetimeInRange(searchControlObjectId, beginningDate, endingDate);
 
+            HashMap<String, ArrayList> results2 = new HashMap<>();
+            results2.put("temperature", new ArrayList<Double>());
+            results2.put("weather", new ArrayList<Double>());
+            results2.put("power", new ArrayList<Double>());
+            results2.put("predicted", new ArrayList<Double>());
+            results2.put("time", new ArrayList<String>());
+            results2.put("timeReal", new ArrayList<Date>());
+            for(CloseData closeData : closeDataList){
+                results2.get("temperature").add(closeData.getNodeTemperature());
+                results2.get("weather").add(closeData.getTemperature());
+                results2.get("power").add(closeData.getPower());
+                results2.get("predicted").add(closeData.getPredictedTemperature());
+                results2.get("time").add(closeData.getDatetimeStr());
+                results2.get("timeReal").add(closeData.getDatetimeStr());
+            }
 
-            HashMap<String, Object> results = MeasurementsDisplayPrepareService.getPreparedMeasurementsArrays(searchControlObjectId, beginningDate, endingDate);
-
-            System.out.println("temperature: " + (ArrayList<Double>) results.get("temperature"));
-            System.out.println("weather: " + (ArrayList<Double>) results.get("weather"));
-            System.out.println("power: " + (ArrayList<Double>) results.get("power"));
-            System.out.println("time: " + (ArrayList<Date>) results.get("time"));
+//            HashMap<String, Object> results = MeasurementsDisplayPrepareService.getPreparedMeasurementsArrays(searchControlObjectId, beginningDate, endingDate);
+//
+//            System.out.println("temperature: " + (ArrayList<Double>) results.get("temperature"));
+//            System.out.println("weather: " + (ArrayList<Double>) results.get("weather"));
+//            System.out.println("power: " + (ArrayList<Double>) results.get("power"));
+//            System.out.println("time: " + (ArrayList<Date>) results.get("time"));
 
 
             // getting images names:
-            results.put("imagesNames", new ArrayList<String>());
+            results2.put("imagesNames", new ArrayList<String>());
 
-            if(((ArrayList<Date>) results.get("time")).size() > 1){
+            if(((ArrayList<Date>) results2.get("timeReal")).size() > 1){
 
 
                 System.out.println("date " + beginningDate + " --> " + endingDate);
@@ -318,7 +369,7 @@ public class AreaPageRestController {
                                 }
                                 if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
                                     //System.out.println("append image");
-                                    ((ArrayList<String>)results.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
+                                    ((ArrayList<String>)results2.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
                                 }
                             }
 
@@ -329,8 +380,8 @@ public class AreaPageRestController {
             }
 
 
-
-            String jsonStringToSend = JSONObject.valueToString(results);
+            results2.remove("timeReal");
+            String jsonStringToSend = JSONObject.valueToString(results2);
             return jsonStringToSend;
         } catch (Exception e) {
             System.out.println("Get measurements in range error: " + e);
@@ -391,15 +442,7 @@ public class AreaPageRestController {
         return "Сохранено";
     }
 
-    @RequestMapping(value = "getLog", method = RequestMethod.POST)
-    public String getLog(){
-        List<LogRecord> logRecords =  logRecordRepo.getLast(300);
-        List<Map> result = new ArrayList<>();
-        for(LogRecord r: logRecords){
-            result.add(r.getMapped());
-        }
-        return JSONObject.valueToString(result);
-    }
+
 
     @RequestMapping(value = "getMute", method = RequestMethod.POST)
     public String getMute(@RequestParam Long id){

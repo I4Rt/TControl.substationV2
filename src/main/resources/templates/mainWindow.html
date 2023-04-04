@@ -97,7 +97,7 @@
 
         <div class="list" style="height: 750px">
             <div class="myRow" style="font-size: 18px; width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b style="font-size: 16px">Участки наблюдения</b></b></div>
-            <div class="myRow areaList" >
+            <div class="myRow areaList" style="gap: 0px">
                 <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
                         <text th:utext="${controlObject.name}">Зона 1</text>
                         <div class="marker " th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}" th:name="${controlObject.id}"></div>

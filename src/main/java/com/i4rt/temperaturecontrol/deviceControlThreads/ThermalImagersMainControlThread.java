@@ -40,7 +40,7 @@ public class ThermalImagersMainControlThread extends Thread {
 
     private UserRepo userRepo;
 
-    private final Integer maxChildThreadsCountBeforeReboot = 1000;
+    private final Integer maxChildThreadsCountBeforeReboot = 500;
     private HashMap<Long, Integer> curChildThreadsCount;
 
 

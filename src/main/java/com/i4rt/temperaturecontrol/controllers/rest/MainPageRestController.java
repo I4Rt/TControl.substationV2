@@ -7,11 +7,15 @@ import com.i4rt.temperaturecontrol.deviceControlThreads.ThermalImagersMainContro
 import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThread;
 import com.i4rt.temperaturecontrol.model.ControlObject;
 
+import com.i4rt.temperaturecontrol.model.LogRecord;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -126,5 +130,15 @@ public class MainPageRestController {
         co.setMapY(null);
 
         controlObjectRepo.save(co);
+    }
+
+    @RequestMapping(value = "getLog", method = RequestMethod.POST)
+    public String getLog(){
+        List<LogRecord> logRecords =  logRecordRepo.getLast(300);
+        List<Map> result = new ArrayList<>();
+        for(LogRecord r: logRecords){
+            result.add(r.getMapped());
+        }
+        return JSONObject.valueToString(result);
     }
 }

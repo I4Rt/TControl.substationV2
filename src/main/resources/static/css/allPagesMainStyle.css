@@ -205,7 +205,7 @@ body{
     color: forestgreen;
 }
 .warning{
-    color: #e5e500;
+    color: #fffb00;
 }
 .danger{
     color: red;
@@ -214,14 +214,14 @@ body{
     color: red;
 }
 .predicted{
-    color: #f8c200;
+    color: #fffb00;
 }
 
 .marker.normal{
     background-color: forestgreen;
 }
 .marker.warning{
-    background-color: #e5e500;
+    background-color: #fffb00;
 }
 .marker.danger{
     background-color: red;
@@ -234,7 +234,7 @@ body{
     background-color: darkgray;
 }
 .marker.predicted{
-    background-color: #f8c200;
+    background-color: #fffb00;
 }
 
 

@@ -304,6 +304,9 @@ public class MainController {
 
         System.out.println(user);
 
+        curUser.setThermalImagerGrabbed(false);
+        userRepo.save(curUser);
+
         if(user.getPassword().length() >= 10){
             if(user.getPassword().equals(user.getPasswordRepeat())){
                 user.setPassword(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode(user.getPasswordRepeat()));
@@ -338,6 +341,9 @@ public class MainController {
         User curUser = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         model.addAttribute("user", curUser);
 
+        curUser.setThermalImagerGrabbed(false);
+        userRepo.save(curUser);
+
         if(curUser.getRole().equals("ADMIN")){
             model.addAttribute("adderClass", "");
         }
@@ -352,6 +358,9 @@ public class MainController {
     public String deleteUser(@RequestParam Long id, Model model){
         User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
         model.addAttribute("user", user);
+
+        user.setThermalImagerGrabbed(false);
+        userRepo.save(user);
 
         userRepo.deleteById(id);
 
@@ -384,7 +393,6 @@ public class MainController {
         model.addAttribute("pointId", id);
 
         user.setThermalImagerGrabbed(false);
-
         userRepo.save(user);
 
         if(user.getRole().equals("ADMIN")){

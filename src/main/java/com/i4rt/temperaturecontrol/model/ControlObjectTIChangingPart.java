@@ -34,15 +34,16 @@ public class ControlObjectTIChangingPart {
 
 
     public void updateTemperatureClass(Double curTemp, Double curWeatherTemp, Double predicted){
-        if (predicted != null & predicted > controlObject.getMaxPredictedDifference()){
-            temperatureClass = "predicted";
+        if(curTemp > controlObject.getDangerTemp()) {
+            temperatureClass = "danger";
         }
         else if(curWeatherTemp != null && curTemp - curWeatherTemp > controlObject.getWarningTemp() ){
             temperatureClass = "dangerDifference";
         }
-
-        else if(curTemp > controlObject.getDangerTemp()) {
-            temperatureClass = "danger";
+        else if (predicted != null ){
+            if (predicted > controlObject.getMaxPredictedDifference()){
+                temperatureClass = "predicted";
+            }
         }
         else{
             temperatureClass = "normal";

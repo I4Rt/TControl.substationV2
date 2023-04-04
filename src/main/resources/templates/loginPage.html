@@ -6,6 +6,13 @@
 
 </head>
 <style>
+    .row{
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-around;
+    }
     *{
         font-family: "Arial";
     }
@@ -54,7 +61,8 @@
 </style>
 <body>
 <div class="formHolder">
-    <h1 >Вход</h1>
+    <h4>Система постоянного <br>тепловизионного мониторинга</h4>
+    <h2 >Вход</h2>
     <form class="loginForm" action="/login" th:object="${user}" method="POST" enctype="utf8">
 
         <div>
@@ -73,6 +81,10 @@
     </div>
     <div class="infoMessage" th:if="${param.logout}">
         You have been logged out.
+    </div>
+    <div class="row">
+        <img style="width: 170px" src = "img/SibFU.png" />
+        <img style="width: 80px" src = "img/Rusal.svg" />
     </div>
 </div>
 
