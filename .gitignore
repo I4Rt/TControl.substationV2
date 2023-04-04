@@ -35,3 +35,4 @@ build/
 
 ### Reports and TI images ###
 src/main/upload/*
+*.log
