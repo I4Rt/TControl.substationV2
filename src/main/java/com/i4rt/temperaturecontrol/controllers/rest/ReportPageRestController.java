@@ -25,13 +25,16 @@ public class ReportPageRestController {
     private final WeatherMeasurementRepo weatherMeasurementRepo;
     @Autowired
     private final MIPMeasurementRepo mipMeasurementRepo;
+    @Autowired
+    private final CloseDataRepo closeDataRepo;
 
-    public ReportPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo) {
+    public ReportPageRestController(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo, UserRepo userRepo, WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo, CloseDataRepo closeDataRepo) {
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.userRepo = userRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
+        this.closeDataRepo = closeDataRepo;
     }
 
 
@@ -52,7 +55,7 @@ public class ReportPageRestController {
 
 //            System.out.println("\n\n\n" + results.get(1) + "\n\n\n");
 
-            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo);
+            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo, this.closeDataRepo);
             name = createExcelReport.createMainSheet(beginningDate, endingDate, new long[]{});
 
             result.put("reportName", "reports/" + name);
@@ -90,7 +93,7 @@ public class ReportPageRestController {
 
 //            System.out.println("\n\n\n" + results.get(1) + "\n\n\n");
 
-            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo);
+            CreateExcelReport createExcelReport = new CreateExcelReport(this.controlObjectRepo, this.measurementRepo, this.weatherMeasurementRepo, this.mipMeasurementRepo, this.closeDataRepo);
             name = createExcelReport.createMainSheet(beginningDate, endingDate, areaIdList);
 
             // Вызов нужного метода!!!!

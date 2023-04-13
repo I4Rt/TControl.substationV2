@@ -1,5 +1,6 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
+import com.i4rt.temperaturecontrol.Services.SystemParametersHolder;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.deviceControlThreads.MIPControlThread;
 import com.i4rt.temperaturecontrol.deviceControlThreads.MIPSaver;
@@ -8,6 +9,7 @@ import com.i4rt.temperaturecontrol.deviceControlThreads.WeatherStationControlThr
 import com.i4rt.temperaturecontrol.model.ControlObject;
 
 import com.i4rt.temperaturecontrol.model.LogRecord;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -92,33 +94,25 @@ public class MainPageRestController {
     public String getMapAndListArraysJSON(){
 
         List<ControlObject> controlObjectsToDisplay = controlObjectRepo.getControlObjectsToDisplay();
-        String jsonStringObjectsToDisplay = "[";
-        for (ControlObject controlObject : controlObjectsToDisplay) {
-            jsonStringObjectsToDisplay += controlObject.getJsonStringWithMap();
-            jsonStringObjectsToDisplay += ",";
-        }
-        if(jsonStringObjectsToDisplay.length() > 1){
-            jsonStringObjectsToDisplay = jsonStringObjectsToDisplay.substring(0,jsonStringObjectsToDisplay.length() - 1);
-        }
-        jsonStringObjectsToDisplay += "]";
-
-        System.out.println("objects to display: " + jsonStringObjectsToDisplay);
-
-
         List<ControlObject> controlObjectsList = controlObjectRepo.getOrderedByName();
-        String jsonStringObjectsList = "[";
+        List<Map> controlObjectDataListToDisplay = new ArrayList<>();
+        List<Map> controlObjectDataList = new ArrayList<>();
+
+        for (ControlObject controlObject : controlObjectsToDisplay) {
+            controlObjectDataListToDisplay.add(controlObject.getMap());
+        }
 
         for (ControlObject controlObject : controlObjectsList) {
-            jsonStringObjectsList += controlObject.getJsonStringNoMap();
-            jsonStringObjectsList += ",";
+            controlObjectDataList.add(controlObject.getMap());
         }
-        jsonStringObjectsList = jsonStringObjectsList.substring(0,jsonStringObjectsList.length() - 1);
-        jsonStringObjectsList += "]";
 
-        System.out.println("objects to list: " + jsonStringObjectsList);
 
-        System.out.println("[" + jsonStringObjectsList +", " + jsonStringObjectsToDisplay + "]");
-        return "[" + jsonStringObjectsList +", " + jsonStringObjectsToDisplay + "]";
+        ArrayList<List> result = new ArrayList<>();
+        result.add(controlObjectDataList);
+        result.add(controlObjectDataListToDisplay);
+
+
+        return JSONObject.valueToString(result);
     }
 
 
@@ -134,11 +128,17 @@ public class MainPageRestController {
 
     @RequestMapping(value = "getLog", method = RequestMethod.POST)
     public String getLog(){
-        List<LogRecord> logRecords =  logRecordRepo.getLast(300);
+        List<LogRecord> logRecords =  logRecordRepo.getLast(SystemParametersHolder.getInstance().getLogLimit());
         List<Map> result = new ArrayList<>();
         for(LogRecord r: logRecords){
             result.add(r.getMapped());
         }
         return JSONObject.valueToString(result);
+    }
+
+    @RequestMapping(value = "setLogLimit", method = RequestMethod.POST)
+    public String updateLogLimit(@RequestParam Integer limit){
+        SystemParametersHolder.getInstance().setLogLimit(limit);
+        return "ok";
     }
 }

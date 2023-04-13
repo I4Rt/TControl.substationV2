@@ -192,23 +192,14 @@ body{
 
     border-radius: 100px;
     border: 2px solid dimgray;
+    cursor: pointer;
 
 }
 .noData{
     color: darkgray;
 }
-.normal{
-    color: forestgreen;
-}
-.warning{
-    color: #e5e500;
-}
-.danger{
-    color: red;
-}
-.dangerDifference{
-    color: red;
-
+.normal, .danger, .predicted, .dangerDifference{
+    color: black;
 }
 
 .marker.normal{

@@ -6,7 +6,9 @@ import org.json.JSONObject;
 
 
 import javax.persistence.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Setter
@@ -27,10 +29,12 @@ public class ControlObject implements Comparable<ControlObject>{
     @Column(unique = true)
     private String name;
 
+    // линия
+    @Column
+    private String voltageMeasurementLine;
+    // фаза
     @Column
     private String voltageMeasurementChannel;
-
-
 
     @OneToMany(mappedBy = "controlObject", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<NodeNote> nodeNotes;
@@ -108,6 +112,7 @@ public class ControlObject implements Comparable<ControlObject>{
                 "\"id\": " + this.id + ", " +
                 "\"name\": \"" + this.name + "\", " +
                 "\"temperatureClass\": \"" + this.controlObjectTIChangingPart.getTemperatureClass() + "\"" +
+                "\"needMute\": " + this.needMute +
                 "}";
     }
 
@@ -119,7 +124,18 @@ public class ControlObject implements Comparable<ControlObject>{
                 "\"temperatureClass\": \"" + this.controlObjectTIChangingPart.getTemperatureClass() + "\", " +
                 "\"mapX\": " + this.mapX + ", " +
                 "\"mapY\": " + this.mapY +
+                "\"needMute\": " + this.needMute +
                 "}";
+    }
+    public Map getMap(){
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", this.id);
+        map.put("name", this.name);
+        map.put("temperatureClass", this.controlObjectTIChangingPart.getTemperatureClass());
+        map.put("mapX", this.mapX);
+        map.put("mapY", this.mapY);
+        map.put("needMute", this.needMute);
+        return map;
     }
 
     public String getCoordinatesString(){

@@ -1,7 +1,7 @@
 package com.i4rt.temperaturecontrol.controllers.rest;
 
 import com.i4rt.temperaturecontrol.Services.AlertSetter;
-import com.i4rt.temperaturecontrol.Services.MeasurementsDisplayPrepareService;
+
 import com.i4rt.temperaturecontrol.basic.FolderManager;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.model.*;
@@ -70,23 +70,16 @@ public class AreaPageRestController {
                     curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
                     curControlObject.setMaxPredictedDifference(data.getDouble("maxPredictedDifference"));
                     curControlObject.setVoltageMeasurementChannel(data.getString("MIPChanel"));
-                    if(measurementRepo.getMeasurementByAreaId(curControlObject.getControlObjectTIChangingPart().getId(), 1).size() != 0){
-                        if(! measurementRepo.getMeasurementByAreaId(curControlObject.getControlObjectTIChangingPart().getId(), 1).get(0).getTemperature().equals(null)){
-                            Double weatherStationMeasurementTemperature = measurementRepo.getMeasurementByAreaId(curControlObject.getControlObjectTIChangingPart().getId(), 1).get(0).getTemperature();
-                            if(weatherMeasurementRepo.getLastWeatherMeasurement() != null){
-                                weatherStationMeasurementTemperature = weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature();
-                            }
-                            ControlObjectTIChangingPart controlObjectTIChangingPart = controlObjectTIChangingPartRepo.getById(curControlObject.getControlObjectTIChangingPart().getId());
+                    curControlObject.setVoltageMeasurementLine(String.valueOf(data.getInt("MIPLine")));
 
-                            CloseData lastCloseData = closeDataRepo.getLastById(curControlObject.getId());
-                            if (lastCloseData != null){
-                                controlObjectTIChangingPart.updateTemperatureClass(lastCloseData.getNodeTemperature(), lastCloseData.getTemperature(), lastCloseData.getPredictedTemperature());
-                            }
+                    CloseData lastCloseData = closeDataRepo.getLastById(curControlObject.getId());
+                    System.out.println("last: " + lastCloseData);
 
-                        }
+                    if (lastCloseData != null){
+                        curControlObject.getControlObjectTIChangingPart().updateTemperatureClass(lastCloseData.getNodeTemperature(), lastCloseData.getTemperature(), lastCloseData.getPredictedTemperature());
+
+                        System.out.println("new temp class: " + curControlObject.getControlObjectTIChangingPart().getTemperatureClass());
                     }
-
-
                 }
             }
             else{
@@ -95,10 +88,11 @@ public class AreaPageRestController {
                 curControlObject.setDangerTemp(data.getDouble("dangerTemp"));
                 curControlObject.setMaxPredictedDifference(data.getDouble("maxPredictedDifference"));
                 curControlObject.setVoltageMeasurementChannel(data.getString("MIPChanel"));
-
+                curControlObject.setVoltageMeasurementLine(String.valueOf((data.getInt("MIPLine"))));
+                curControlObject.setNeedMute(false);
             }
 
-            //curControlObject.getControlObjectTIChangingPart().updateTemperatureClass();
+
             result.put("temperatureClass", curControlObject.getControlObjectTIChangingPart().getTemperatureClass());
 
             controlObjectRepo.save(curControlObject);
@@ -128,6 +122,9 @@ public class AreaPageRestController {
         ArrayList<CloseData> closeDataList = closeDataRepo.getCloseDataLimited(searchControlObjectId, limit);
 
         HashMap<String, ArrayList> results2 = new HashMap<>();
+        results2.put("temperatureClass", new ArrayList<>(){{
+            add(controlObjectRepo.getById(searchControlObjectId).getControlObjectTIChangingPart().getTemperatureClass());
+        }} );
         results2.put("temperature", new ArrayList<Double>());
         results2.put("weather", new ArrayList<Double>());
         results2.put("power", new ArrayList<Double>());
@@ -141,7 +138,11 @@ public class AreaPageRestController {
             results2.get("time").add(closeData.getDatetimeStr());
 
         }
-
+        Collections.reverse(results2.get("temperature"));
+        Collections.reverse(results2.get("weather"));
+        Collections.reverse(results2.get("power"));
+        Collections.reverse(results2.get("predicted"));
+        Collections.reverse(results2.get("time"));
 
 
 
@@ -192,6 +193,12 @@ public class AreaPageRestController {
             results2.get("time").add(closeData.getDatetimeStr());
             results2.get("timeReal").add(closeData.getDatetime());
         }
+        Collections.reverse(results2.get("temperature"));
+        Collections.reverse(results2.get("weather"));
+        Collections.reverse(results2.get("power"));
+        Collections.reverse(results2.get("predicted"));
+        Collections.reverse(results2.get("time"));
+        Collections.reverse(results2.get("timeReal"));
         // getting images names:
         results2.put("imagesNames", new ArrayList<String>());
 
@@ -212,7 +219,7 @@ public class AreaPageRestController {
                 File[] listOfInsideFolders = insideFolder.listFiles();
 
                 for(int j = 0; j < listOfInsideFolders.length; j++){
-                    System.out.println("insideFolder");
+                    //System.out.println("insideFolder");
                     //System.out.println("area folder: " + listOfInsideFolders[j].getName());
                     //System.out.println("equals: " + listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName()));
                     if(listOfInsideFolders[j].getName().equals(controlObjectRepo.getById(searchControlObjectId).getName())){
@@ -229,7 +236,7 @@ public class AreaPageRestController {
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
-                            System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0));
+                            //System.out.println("image dates: beginning: " + beginningDate + " ending: " + endingDate + " cur: " + tempDate + " result: " + (endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0));
                             if(endingDate.compareTo(tempDate) >= 0 && beginningDate.compareTo(tempDate) <= 0){
                                 //System.out.println("append image");
                                 ((ArrayList<String>)results2.get("imagesNames")).add("imgData/" + listOfFiles[i].getName() + "/" + listOfInsideFolders[j].getName() + "/" + listOfInsideFiles[n].getName());
@@ -324,6 +331,13 @@ public class AreaPageRestController {
                 results2.get("timeReal").add(closeData.getDatetimeStr());
             }
 
+            Collections.reverse(results2.get("temperature"));
+            Collections.reverse(results2.get("weather"));
+            Collections.reverse(results2.get("power"));
+            Collections.reverse(results2.get("predicted"));
+            Collections.reverse(results2.get("time"));
+            Collections.reverse(results2.get("timeReal"));
+
 //            HashMap<String, Object> results = MeasurementsDisplayPrepareService.getPreparedMeasurementsArrays(searchControlObjectId, beginningDate, endingDate);
 //
 //            System.out.println("temperature: " + (ArrayList<Double>) results.get("temperature"));
@@ -397,7 +411,8 @@ public class AreaPageRestController {
         nodeNoteRepo.deleteByCOID(id);
         controlObjectRepo.deleteByID(id);
         System.out.println("Deleting area by id " + id);
-        return "Область контроля удалена";
+
+        return "ok";
     }
 
     @RequestMapping(value = "getNodeNotes")

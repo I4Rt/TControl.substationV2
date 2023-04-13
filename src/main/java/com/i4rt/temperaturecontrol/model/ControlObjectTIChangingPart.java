@@ -34,21 +34,32 @@ public class ControlObjectTIChangingPart {
 
 
     public void updateTemperatureClass(Double curTemp, Double curWeatherTemp, Double predicted){
+        System.out.println(curTemp);
+        System.out.println(curWeatherTemp);
+        System.out.println(predicted);
+        System.out.println(controlObject.getDangerTemp());
+        System.out.println(controlObject.getWarningTemp());
+        System.out.println(controlObject.getMaxPredictedDifference());
+
         if(curTemp > controlObject.getDangerTemp()) {
-            temperatureClass = "danger";
+            System.out.println("h1");
+            setTemperatureClass("danger");
         }
-        else if(curWeatherTemp != null && curTemp - curWeatherTemp > controlObject.getWarningTemp() ){
-            temperatureClass = "dangerDifference";
+        else if(curWeatherTemp != null && Math.abs(curTemp - curWeatherTemp) > controlObject.getWarningTemp() ){
+            System.out.println("h2");
+            setTemperatureClass("dangerDifference");
         }
-        else if (predicted != null ){
-            if (predicted > controlObject.getMaxPredictedDifference()){
-                temperatureClass = "predicted";
-            }
+        else if (predicted != null && Math.abs(curTemp - predicted) > controlObject.getMaxPredictedDifference()){
+            System.out.println("h3");
+            setTemperatureClass("predicted");
         }
         else{
-            temperatureClass = "normal";
+            System.out.println("h4");
+            setTemperatureClass("normal");
         }
 
+
+        System.out.println(this.temperatureClass);
         //System.out.println("temperature class of " + name + " is " + temperatureClass);
     }
 

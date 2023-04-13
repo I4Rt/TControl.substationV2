@@ -13,7 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
+
 
 import javax.sql.DataSource;
 
@@ -27,10 +27,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(HttpSecurity http) throws Exception{
         http.authorizeHttpRequests((requests) -> requests
-                .antMatchers("/adding", "/saveArea", "/register", "/registerUser", "/usersList", "/deleteArea").hasAnyAuthority("ADMIN")
+
+                .mvcMatchers("/adding", "/saveArea", "/register", "/registerUser", "/usersList", "/deleteArea", "/setMute").hasAnyAuthority("ADMIN")
                 .antMatchers("/main", "/saveArea", "/area", "/adding").authenticated()
                 .antMatchers("/img/Rusal.svg", "/img/SibFU.png").permitAll()
                 .anyRequest().authenticated()
+
             )
             .formLogin((form) -> form
                 .loginPage("/login").passwordParameter("password").usernameParameter("login")

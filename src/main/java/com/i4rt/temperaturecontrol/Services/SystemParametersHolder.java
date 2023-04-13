@@ -12,9 +12,11 @@ public class SystemParametersHolder {
     private static SystemParametersHolder instance;
 
     private Boolean tooLowTemperatureStopMark;
+    private Integer logLimit;
 
     private SystemParametersHolder() {
         this.tooLowTemperatureStopMark = false;
+        this.logLimit = 100;
     }
 
     public static SystemParametersHolder getInstance() {

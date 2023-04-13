@@ -1,3 +1,4 @@
+/*
 package com.i4rt.temperaturecontrol.Services;
 
 import com.i4rt.temperaturecontrol.databaseInterfaces.ControlObjectRepo;
@@ -202,3 +203,4 @@ public class MeasurementsDisplayPrepareService {
     
     
 }
+*/

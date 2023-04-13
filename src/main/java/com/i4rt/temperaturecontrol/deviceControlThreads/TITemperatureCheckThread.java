@@ -32,7 +32,7 @@ public class TITemperatureCheckThread extends Thread{
 
     private Long thermalImagerID;
 
-    private final HttpSenderService pythonServer = new HttpSenderService("192.168.3.34", 5000);
+    private final HttpSenderService pythonServer = new HttpSenderService("10.136.168.16", 5000);
 
 
 
@@ -125,6 +125,7 @@ public class TITemperatureCheckThread extends Thread{
                             throw new Exception();
                         }
                         else{
+                            Thread.sleep(1500);
                             System.out.println("Going to the point result (" + co.getName() + ") is " + result1);
                             if (co.getX() != null && co.getY() != null && co.getAreaWidth() != null && co.getAreaHeight() != null) {
                                 String configureResult = thermalImager.configureArea(co.getX(), co.getY(), co.getX() + co.getAreaWidth(), co.getY() + co.getAreaHeight());
@@ -176,11 +177,21 @@ public class TITemperatureCheckThread extends Thread{
                                         controlObjectTIChangingPartRepo.save(coTI);
                                         measurementRepo.save(m);
 
-                                        if (!coTI.getTemperatureClass().equals("normal") &&
-                                                !coTI.getTemperatureClass().equals("noData")){
-                                            LogRecord logRecord = new LogRecord(co.getName() + ": Зафиксировано превышение допустимых границ температур");
-                                            logRecordRepo.save(logRecord);
+                                        switch (coTI.getTemperatureClass()){
+                                            case "danger":
+                                                LogRecord logRecord1 = new LogRecord(co.getName() + ": Зафиксировано превышение допустимых границ температур");
+                                                logRecordRepo.save(logRecord1);
+                                                break;
+                                            case "dangerDifference":
+                                                LogRecord logRecord2 = new LogRecord(co.getName() + ": Зафиксировано превышение допустимой разницы температуры узла с температурой воздуха");
+                                                logRecordRepo.save(logRecord2);
+                                                break;
+                                            case "predicted":
+                                                LogRecord logRecord3 = new LogRecord(co.getName() + ": Зафиксировано отклонение от плановой температуры");
+                                                logRecordRepo.save(logRecord3);
+                                                break;
                                         }
+
 
                                         AlertSetter.setNeedBeep(controlObjectTIChangingPartRepo);
                                         System.out.println(alertHolder);

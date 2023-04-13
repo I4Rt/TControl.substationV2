@@ -24,14 +24,17 @@ public class CreateExcelReport {
     private final MeasurementRepo measurementRepo;
     private final WeatherMeasurementRepo weatherMeasurementRepo;
     private final MIPMeasurementRepo mipMeasurementRepo;
+    private final CloseDataRepo closeDataRepo;
 
     public CreateExcelReport(ControlObjectRepo controlObjectRepo, MeasurementRepo measurementRepo,
-                             WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo){
+                             WeatherMeasurementRepo weatherMeasurementRepo, MIPMeasurementRepo mipMeasurementRepo,
+                             CloseDataRepo closeDataRepo){
 
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.weatherMeasurementRepo = weatherMeasurementRepo;
         this.mipMeasurementRepo = mipMeasurementRepo;
+        this.closeDataRepo = closeDataRepo;
     }
 
     public String createMainSheet(Date beginningDate, Date endingDate, long[] areaIdList) throws IOException {
@@ -102,8 +105,12 @@ public class CreateExcelReport {
                 //проверка на перегретость
 //                List<Measurement> measurements = controlObject.getMeasurement();
                 try {
-                    Double highestTemp = measurementRepo.getHighestTemp(controlObject.getControlObjectTIChangingPart().getId(), beginningDate, endingDate).get(0).getTemperature();
-                    if (highestTemp > controlObject.getDangerTemp() || highestTemp > controlObject.getWarningTemp()) overheating = true;
+                    CloseData highestTempData = closeDataRepo.getHighestTemperature(controlObject.getId(), beginningDate, endingDate).get(0);
+                    System.out.println(highestTempData.getId());
+                    Double highestTemp = highestTempData.getNodeTemperature();
+//                    Double highestTemp = measurementRepo.getHighestTemp(controlObject.getControlObjectTIChangingPart().getId(), beginningDate, endingDate).get(0).getTemperature();
+                    if (highestTemp > controlObject.getDangerTemp() ||
+                            highestTemp - highestTempData.getTemperature() > controlObject.getWarningTemp()) overheating = true;
                 } catch (Exception e){
                     System.out.println(e.getMessage());
                 }
@@ -151,112 +158,137 @@ public class CreateExcelReport {
                 int numCellValue = 1;
                 int numCellWeather = 4;
                 int numCellMip = 5;
+                int numCellPredicted = 6;
 
                 System.out.println("\nGet total values\n");
 
-                ArrayList<Object> allData = getTotalValues(controlObject, weatherMeasurementRepo,
-                        measurementRepo, mipMeasurementRepo, beginningDate, endingDate);
-                ArrayList<Date> totalDates = (ArrayList<Date>) allData.get(0);
-                Collections.sort(totalDates);
-                Map<Date, Object> preparedToSendData = (Map<Date, Object>) allData.get(1);
+                ArrayList<CloseData> allData = closeDataRepo.getCloseDataByDatetimeInRange(controlObject.getId(), beginningDate, endingDate);
+                if (allData.isEmpty()) continue;
 
-                if (preparedToSendData.isEmpty()) {
-                    continue;
-                }
+                Collections.reverse(allData);
+
+//                ArrayList<Object> allData = getTotalValues(controlObject, closeDataRepo, beginningDate, endingDate);
+//                ArrayList<Date> totalDates = (ArrayList<Date>) allData.get(0);
+//                Collections.sort(totalDates);
+//                Map<Date, Object> preparedToSendData = (Map<Date, Object>) allData.get(1);
 
                 System.out.println("\nПеред выводом измерений на отдельные листы\n");
 
                 // вывод измерений на отдельный лист эксель
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(totalDates.get(0));
-                cal.add(Calendar.HOUR, 2);
-                Date datePlusMinute = cal.getTime();
+//                Calendar cal = Calendar.getInstance();
+//                cal.setTime(totalDates.get(0));
+//                cal.add(Calendar.HOUR, 2);
+//                Date datePlusMinute = cal.getTime();
 
-                ArrayList<Date> minuteDates = new ArrayList<>();
+//                ArrayList<Date> minuteDates = new ArrayList<>();
                 int rowCount = 2;
 
-                for (int i = 0; i < totalDates.size(); i++) {
-//                System.out.println("time: " + totalDates.get(i));
-//                System.out.println(datePlusMinute);
-                    if (!totalDates.get(i).before(datePlusMinute)) {
-//                    System.out.println("check");
+                for (CloseData closeData: allData){
+                    rowCount++;
 
-                        rowCount++;
-                        Double weatherTemp = 0.0;
-                        Double temp = 0.0;
-                        Double mipPower = 0.0;
-                        Double maxWeatherTemp = -273.0;
-                        Double maxTemp = -273.0;
-                        Double maxMipPower = -273.0;
+                    Row rowInf = cellSheet.createRow(rowCount);
 
-                        int weatherCount = 0;
-                        int thermalCount = 0;
-                        int mipCount = 0;
-                        for (int j = 0; j < minuteDates.size(); j++) {
-                            if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement) {
-                                Double value = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-//                            System.out.println("w: " + value);
-                                weatherTemp += value;
-                                weatherCount++;
-                                if (value >= maxWeatherTemp) maxWeatherTemp = value;
-                            }
-                            if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement) {
-                                Double value = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
-//                            System.out.println(((Measurement) preparedToSendData.get(minuteDates.get(j))).getDatetime());
-//                            System.out.println("t: " + value);
-                                temp += value;
-                                thermalCount++;
-                                if (value >= maxTemp) maxTemp = value;
-                            }
-                            if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement) {
-                                String voltageMeasurementChannel = controlObject.getVoltageMeasurementChannel();
-                                Double value;
-                                if (voltageMeasurementChannel.equals("A")) value = ((MIPMeasurement)
-                                        preparedToSendData.get(minuteDates.get(j))).getPowerA();
-                                else if (voltageMeasurementChannel.equals("B")) value = ((MIPMeasurement)
-                                        preparedToSendData.get(minuteDates.get(j))).getPowerB();
-                                else value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerC();
+                    Cell cellDate = rowInf.createCell(numCellDate);
+                    cellDate.setCellStyle(dateStyle);
+                    cellDate.setCellValue(closeData.getDatetime());
+                    cellSheet.autoSizeColumn(numCellDate);
 
-//                            System.out.println("m: " + value);
-                                mipPower += value;
-                                mipCount++;
-                                if (value >= maxMipPower) maxMipPower = value;
-                            }
-                        }
-                        Row rowInf = cellSheet.createRow(rowCount);
+                    Cell cellValue = rowInf.createCell(numCellValue);
+                    cellValue.setCellValue(closeData.getNodeTemperature());
 
-                        Cell cellDate = rowInf.createCell(numCellDate);
-                        cellDate.setCellStyle(dateStyle);
-                        cellDate.setCellValue(minuteDates.get(0));
-                        cellSheet.autoSizeColumn(numCellDate);
+                    Cell cellWeather = rowInf.createCell(numCellWeather);
+                    cellWeather.setCellValue(closeData.getTemperature());
 
-                        Cell cellValue = rowInf.createCell(numCellValue);
-                        if (thermalCount != 0) cellValue.setCellValue(temp / thermalCount);
-                        else cellValue.setBlank();
+                    Cell cellMip = rowInf.createCell(numCellMip);
+                    cellMip.setCellValue(closeData.getPower());
 
-                        Cell cellWeather = rowInf.createCell(numCellWeather);
-                        if (weatherCount != 0) cellWeather.setCellValue(weatherTemp / weatherCount);
-                        else cellWeather.setBlank();
+                    Cell cellPredicted = rowInf.createCell(numCellPredicted);
+                    cellPredicted.setCellValue(closeData.getPredictedTemperature());
 
-                        Cell cellMip = rowInf.createCell(numCellMip);
-                        if (mipCount != 0) cellMip.setCellValue((mipPower / mipCount) / 1000);
-                        else cellMip.setBlank();
-
-                        cal.setTime(totalDates.get(i));
-                        cal.add(Calendar.HOUR, 2);
-                        datePlusMinute = cal.getTime();
-
-                        minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()));
-//                    System.out.println(minuteDates.toString());
-                    }
-
-                    minuteDates.add(totalDates.get(i));
                 }
+
+//                for (int i = 0; i < totalDates.size(); i++) {
+////                System.out.println("time: " + totalDates.get(i));
+////                System.out.println(datePlusMinute);
+//                    if (!totalDates.get(i).before(datePlusMinute)) {
+////                    System.out.println("check");
+//
+//                        rowCount++;
+//                        Double weatherTemp = 0.0;
+//                        Double temp = 0.0;
+//                        Double mipPower = 0.0;
+//                        Double maxWeatherTemp = -273.0;
+//                        Double maxTemp = -273.0;
+//                        Double maxMipPower = -273.0;
+//
+//                        int weatherCount = 0;
+//                        int thermalCount = 0;
+//                        int mipCount = 0;
+//                        for (int j = 0; j < minuteDates.size(); j++) {
+//                            if (preparedToSendData.get(minuteDates.get(j)) instanceof WeatherMeasurement) {
+//                                Double value = ((WeatherMeasurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+////                            System.out.println("w: " + value);
+//                                weatherTemp += value;
+//                                weatherCount++;
+//                                if (value >= maxWeatherTemp) maxWeatherTemp = value;
+//                            }
+//                            if (preparedToSendData.get(minuteDates.get(j)) instanceof Measurement) {
+//                                Double value = ((Measurement) preparedToSendData.get(minuteDates.get(j))).getTemperature();
+////                            System.out.println(((Measurement) preparedToSendData.get(minuteDates.get(j))).getDatetime());
+////                            System.out.println("t: " + value);
+//                                temp += value;
+//                                thermalCount++;
+//                                if (value >= maxTemp) maxTemp = value;
+//                            }
+//                            if (preparedToSendData.get(minuteDates.get(j)) instanceof MIPMeasurement) {
+//                                String voltageMeasurementChannel = controlObject.getVoltageMeasurementChannel();
+//                                Double value;
+//                                if (voltageMeasurementChannel.equals("A")) value = ((MIPMeasurement)
+//                                        preparedToSendData.get(minuteDates.get(j))).getPowerA();
+//                                else if (voltageMeasurementChannel.equals("B")) value = ((MIPMeasurement)
+//                                        preparedToSendData.get(minuteDates.get(j))).getPowerB();
+//                                else value = ((MIPMeasurement) preparedToSendData.get(minuteDates.get(j))).getPowerC();
+//
+////                            System.out.println("m: " + value);
+//                                mipPower += value;
+//                                mipCount++;
+//                                if (value >= maxMipPower) maxMipPower = value;
+//                            }
+//                        }
+//                        Row rowInf = cellSheet.createRow(rowCount);
+//
+//                        Cell cellDate = rowInf.createCell(numCellDate);
+//                        cellDate.setCellStyle(dateStyle);
+//                        cellDate.setCellValue(minuteDates.get(0));
+//                        cellSheet.autoSizeColumn(numCellDate);
+//
+//                        Cell cellValue = rowInf.createCell(numCellValue);
+//                        if (thermalCount != 0) cellValue.setCellValue(temp / thermalCount);
+//                        else cellValue.setBlank();
+//
+//                        Cell cellWeather = rowInf.createCell(numCellWeather);
+//                        if (weatherCount != 0) cellWeather.setCellValue(weatherTemp / weatherCount);
+//                        else cellWeather.setBlank();
+//
+//                        Cell cellMip = rowInf.createCell(numCellMip);
+//                        if (mipCount != 0) cellMip.setCellValue((mipPower / mipCount) / 1000);
+//                        else cellMip.setBlank();
+//
+//                        cal.setTime(totalDates.get(i));
+//                        cal.add(Calendar.HOUR, 2);
+//                        datePlusMinute = cal.getTime();
+//
+//                        minuteDates.removeAll(minuteDates.subList(0, minuteDates.size()));
+////                    System.out.println(minuteDates.toString());
+//                    }
+//
+//                    minuteDates.add(totalDates.get(i));
+//                }
 
                 System.out.println("\nПеред перегретыми точками\n");
 
                 // информация по перегретым точкам на главном эксель листе
-                Row row = sheet.createRow(2 + rowSize + 26 * index);
+                Row row = sheet.createRow(2 + rowSize + 28 * index);
                 Cell cell = row.createCell(0);
                 cell.setCellValue("Область " + controlObject.getName());
                 double columnWeight = (cell.toString().length() * 0.44 + 2.24) * 450;
@@ -269,6 +301,7 @@ public class CreateExcelReport {
                 tempBorders.createCell(0).setCellValue("Граничные температуры:");
                 tempBorders.createCell(3).setCellValue(controlObject.getWarningTemp());
                 tempBorders.createCell(4).setCellValue(controlObject.getDangerTemp());
+                tempBorders.createCell(5).setCellValue(controlObject.getMaxPredictedDifference());
 
                 // график температур
                 XSSFChart chart = createChart(sheet, tempBorders.getRowNum() + 2, tempBorders.getRowNum() + 21,
@@ -284,6 +317,9 @@ public class CreateExcelReport {
                 createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
                         numCellMip, numCellMip, "Измерения с МИП, значение*1000", data);
 
+                createDataSource(cellSheet, 2, rowCount, numCellDate, numCellDate, 2, rowCount,
+                        numCellPredicted, numCellPredicted, "Прогнозируемая температура", data);
+
                 // пропуски соединяются линией
                 chart.displayBlanksAs(DisplayBlanks.SPAN);
 
@@ -295,20 +331,52 @@ public class CreateExcelReport {
                 CTPlotArea plotArea = chart.getCTChart().getPlotArea();
                 plotArea.getValAxArray()[0].addNewMajorGridlines();
 
-                ArrayList<Measurement> overheatingMeasurements = measurementRepo.getOverheatingMeasurement(
-                        controlObject.getControlObjectTIChangingPart().getId(), (Double) controlObject.getDangerTemp(), beginningDate, endingDate);
-                ArrayList<Measurement> overheatingWarningMeasurements = measurementRepo.getOverheatingWarningMeasurement(
-                        controlObject.getControlObjectTIChangingPart().getId(), (Double) controlObject.getWarningTemp(), beginningDate, endingDate);
-                overheatingMeasurements.addAll(overheatingWarningMeasurements);
-                String info = "Время превышения температур: ";
-                StringBuilder sb = new StringBuilder(info);
-                ArrayList<String> uniqueDates = new ArrayList<>();
-                for (Measurement measurement : overheatingMeasurements) {
-                    String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(measurement.getDatetime());
-                    if (!uniqueDates.contains(nowDate)) {
-                        uniqueDates.add(nowDate);
-                        sb.append(nowDate);
-                        sb.append(", ");
+//                ArrayList<CloseData> overheatingMeasurements = closeDataRepo.getOverheatingTemperatures(controlObject.getId(),
+//                        beginningDate, endingDate, controlObject.getDangerTemp(), controlObject.getWarningTemp());
+
+
+//                ArrayList<Measurement> overheatingMeasurements = measurementRepo.getOverheatingMeasurement(
+//                        controlObject.getControlObjectTIChangingPart().getId(), (Double) controlObject.getDangerTemp(), beginningDate, endingDate);
+//                ArrayList<Measurement> overheatingWarningMeasurements = measurementRepo.getOverheatingWarningMeasurement(
+//                        controlObject.getControlObjectTIChangingPart().getId(), (Double) controlObject.getWarningTemp(), beginningDate, endingDate);
+//                overheatingMeasurements.addAll(overheatingWarningMeasurements);
+                String infoDanger = "Время превышения порога критической температуры: ";
+                String infoWarning = "Время превышения порога критической разницы температур: ";
+                String infoPredicted = "Время превышения порога критической разницы с прогнозируемой температурой: ";
+
+                StringBuilder sbDanger = new StringBuilder(infoDanger);
+                StringBuilder sbWarning = new StringBuilder(infoWarning);
+                StringBuilder sbPredicted = new StringBuilder(infoPredicted);
+
+                ArrayList<String> uniqueDatesDanger = new ArrayList<>();
+                ArrayList<String> uniqueDatesWarning = new ArrayList<>();
+                ArrayList<String> uniqueDatesPredicted = new ArrayList<>();
+
+                for (CloseData closeData : allData) {
+                    if (closeData.getNodeTemperature() > controlObject.getDangerTemp()){
+                        String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(closeData.getDatetime());
+                        if (!uniqueDatesDanger.contains(nowDate)) {
+                            uniqueDatesDanger.add(nowDate);
+                            sbDanger.append(nowDate);
+                            sbDanger.append(", ");
+                        }
+                    }
+                    if (Math.abs(closeData.getNodeTemperature() - closeData.getTemperature()) > controlObject.getWarningTemp()){
+                        String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(closeData.getDatetime());
+                        if (!uniqueDatesWarning.contains(nowDate)) {
+                            uniqueDatesWarning.add(nowDate);
+                            sbWarning.append(nowDate);
+                            sbWarning.append(", ");
+                        }
+                    }
+                    if (Math.abs(closeData.getNodeTemperature() - closeData.getPredictedTemperature()) >
+                            controlObject.getMaxPredictedDifference()){
+                        String nowDate = new SimpleDateFormat("dd.MM.yyyy").format(closeData.getDatetime());
+                        if (!uniqueDatesPredicted.contains(nowDate)) {
+                            uniqueDatesPredicted.add(nowDate);
+                            sbPredicted.append(nowDate);
+                            sbPredicted.append(", ");
+                        }
                     }
                 }
 
@@ -316,7 +384,9 @@ public class CreateExcelReport {
                 if (overheatingArea){
                     sheet.createRow(tempBorders.getRowNum() + 22).createCell(0).setCellValue(
                             "За выбранный период в области " + controlObject.getName() + " превышения температуры наблюдалось.");
-                    sheet.createRow(tempBorders.getRowNum() + 23).createCell(0).setCellValue(sb.toString());
+                    if (!uniqueDatesDanger.isEmpty()) sheet.createRow(tempBorders.getRowNum() + 23).createCell(0).setCellValue(sbDanger.toString());
+                    if (!uniqueDatesWarning.isEmpty()) sheet.createRow(tempBorders.getRowNum() + 24).createCell(0).setCellValue(sbWarning.toString());
+                    if (!uniqueDatesPredicted.isEmpty()) sheet.createRow(tempBorders.getRowNum() + 25).createCell(0).setCellValue(sbPredicted.toString());
                 }
             }
 //            List<Measurement> measurements = controlObject.getMeasurement();
@@ -338,43 +408,82 @@ public class CreateExcelReport {
         return date;
     }
 
-    public static ArrayList<Object> getTotalValues(ControlObject controlObject,
-                                                   WeatherMeasurementRepo weatherMeasurementRepo,
-                                                   MeasurementRepo measurementRepo,
-                                                   MIPMeasurementRepo mipMeasurementRepo, Date beginningDate,
-                                                   Date endingDate){
-        ArrayList<MeasurementData> measurements = new ArrayList<>();
-        measurements.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate));
-        measurements.addAll( measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(), beginningDate, endingDate));
-        measurements.addAll( mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginningDate, endingDate));
-        Map<Date, Object> preparedToSendData = new HashMap<>();
-        ArrayList<Date> totalDates = new ArrayList<>();
+    public static XSSFChart createChart(XSSFSheet sheet, int row1, int row2, int col1, int col2, String name){
+        XSSFDrawing drawing = sheet.createDrawingPatriarch();
+        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
 
-//        preparedToSendData.put("time", new ArrayList<Date>());
-//        preparedToSendData.put("weatherTemperature", new ArrayList<>());
+        XSSFChart chart = drawing.createChart(anchor);
+        chart.setTitleText("График температуры на точке " + name);
+        chart.setTitleOverlay(false);
 
-        for(MeasurementData obj: measurements){
-            if(obj instanceof WeatherMeasurement){
-                WeatherMeasurement finObj = (WeatherMeasurement) obj;
-                totalDates.add(finObj.getDatetime());
-                preparedToSendData.put(finObj.getDatetime(), finObj);
-            }
-            else if(obj instanceof Measurement){
-                Measurement finObj = (Measurement) obj;
-                totalDates.add(finObj.getDatetime());
-                preparedToSendData.put(finObj.getDatetime(), finObj);
-            }
-            else if (obj instanceof MIPMeasurement){
-                MIPMeasurement finObj = (MIPMeasurement) obj;
-                totalDates.add(finObj.getDatetime());
-                preparedToSendData.put(finObj.getDatetime(), finObj);
-            }
+        return chart;
+    }
 
-        }
+    public static XDDFLineChartData createData(XSSFChart chart) {
 
-        ArrayList<Object> results = new ArrayList<>();
-        results.add(totalDates);
-        results.add(preparedToSendData);
+        XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+        bottomAxis.setTitle("Дата");
+        XDDFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
+        leftAxis.setTitle("Значение");
+
+        return (XDDFLineChartData) chart.createData(ChartTypes.LINE, bottomAxis, leftAxis);
+
+    }
+
+    public static void createDataSource(XSSFSheet sheet, int rowDat1, int rowDat2, int colDat1, int colDat2,
+                                        int rowVal1, int rowVal2, int colVal1, int colVal2,
+                                        String name, XDDFLineChartData data){
+        XDDFDataSource<String> dates = XDDFDataSourcesFactory.fromStringCellRange(sheet,
+                new CellRangeAddress(rowDat1, rowDat2, colDat1, colDat2));
+
+        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(sheet,
+                new CellRangeAddress(rowVal1, rowVal2, colVal1, colVal2));
+
+        XDDFLineChartData.Series series = (XDDFLineChartData.Series) data.addSeries(dates, values);
+        series.setTitle(name, null);
+        series.setSmooth(false);
+        series.setMarkerStyle(MarkerStyle.CIRCLE);
+
+    }
+
+//    public static ArrayList<Object> getTotalValues(ControlObject controlObject, CloseDataRepo closeDataRepo,
+//                                                   Date beginningDate, Date endingDate){
+//        ArrayList<MeasurementData> measurements = new ArrayList<>();
+//        ArrayList<CloseData> closeDataArrayList = closeDataRepo.getCloseDataByDatetimeInRange(controlObject.getId(), beginningDate, endingDate);
+//        for (CloseData data: closeDataArrayList){
+//
+//        }
+//        measurements.addAll( weatherMeasurementRepo.getWeatherMeasurementByDatetimeInRange(beginningDate, endingDate));
+//        measurements.addAll( measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(), beginningDate, endingDate));
+//        measurements.addAll( mipMeasurementRepo.getMIPMeasurementByDatetimeInRange(beginningDate, endingDate));
+//        Map<Date, Object> preparedToSendData = new HashMap<>();
+//        ArrayList<Date> totalDates = new ArrayList<>();
+//
+////        preparedToSendData.put("time", new ArrayList<Date>());
+////        preparedToSendData.put("weatherTemperature", new ArrayList<>());
+//
+//        for(MeasurementData obj: measurements){
+//            if(obj instanceof WeatherMeasurement){
+//                WeatherMeasurement finObj = (WeatherMeasurement) obj;
+//                totalDates.add(finObj.getDatetime());
+//                preparedToSendData.put(finObj.getDatetime(), finObj);
+//            }
+//            else if(obj instanceof Measurement){
+//                Measurement finObj = (Measurement) obj;
+//                totalDates.add(finObj.getDatetime());
+//                preparedToSendData.put(finObj.getDatetime(), finObj);
+//            }
+//            else if (obj instanceof MIPMeasurement){
+//                MIPMeasurement finObj = (MIPMeasurement) obj;
+//                totalDates.add(finObj.getDatetime());
+//                preparedToSendData.put(finObj.getDatetime(), finObj);
+//            }
+//
+//        }
+//
+//        ArrayList<Object> results = new ArrayList<>();
+//        results.add(totalDates);
+//        results.add(preparedToSendData);
 //        ArrayList<Measurement> measurements = measurementRepo.getMeasurementByDatetimeInRange(controlObject.getId(),
 //                beginningDate, endingDate);
 //        ArrayList<WeatherMeasurement> weatherMeasurements = weatherMeasurementRepo
@@ -392,9 +501,9 @@ public class CreateExcelReport {
 //        }
 //
 //        Collections.sort(totalDates);
-
-        return results;
-    }
+//
+//        return results;
+//    }
 
     public static ArrayList<ArrayList<Double>> getTotalTemperatures(ControlObject controlObject,
                                                                     WeatherMeasurementRepo weatherMeasurementRepo,
@@ -436,41 +545,5 @@ public class CreateExcelReport {
         return totalTemperatures;
     }
 
-    public static XSSFChart createChart(XSSFSheet sheet, int row1, int row2, int col1, int col2, String name){
-        XSSFDrawing drawing = sheet.createDrawingPatriarch();
-        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
 
-        XSSFChart chart = drawing.createChart(anchor);
-        chart.setTitleText("График температуры на точке " + name);
-        chart.setTitleOverlay(false);
-
-        return chart;
-    }
-
-    public static XDDFLineChartData createData(XSSFChart chart) {
-
-        XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
-        bottomAxis.setTitle("Дата");
-        XDDFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
-        leftAxis.setTitle("Температура");
-
-        return (XDDFLineChartData) chart.createData(ChartTypes.LINE, bottomAxis, leftAxis);
-
-    }
-
-    public static void createDataSource(XSSFSheet sheet, int rowDat1, int rowDat2, int colDat1, int colDat2,
-                                        int rowVal1, int rowVal2, int colVal1, int colVal2,
-                                        String name, XDDFLineChartData data){
-        XDDFDataSource<String> dates = XDDFDataSourcesFactory.fromStringCellRange(sheet,
-                new CellRangeAddress(rowDat1, rowDat2, colDat1, colDat2));
-
-        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(sheet,
-                new CellRangeAddress(rowVal1, rowVal2, colVal1, colVal2));
-
-        XDDFLineChartData.Series series = (XDDFLineChartData.Series) data.addSeries(dates, values);
-        series.setTitle(name, null);
-        series.setSmooth(false);
-        series.setMarkerStyle(MarkerStyle.CIRCLE);
-
-    }
 }

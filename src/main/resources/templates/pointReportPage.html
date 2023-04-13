@@ -8,7 +8,10 @@
 <link rel="stylesheet" href="css/dropdownStyle.css">
 <link rel="stylesheet" href="css/messageHolderStyle.css">
 <link rel="stylesheet" href="css/areaWindowStyle.css">
+<link rel="stylesheet" href="css/centerBar.css">
 <script src="js/jquery.min.js"></script>
+<script src="js/warnings.js"></script>
+
 
 <style>
     input{
@@ -21,6 +24,12 @@
             <text id="sysActions">Система</text>
             <text id="directActions">Управление</text>
             <text id="userActions">Пользователь</text>
+        </div>
+        <div class="centerBar">
+            <div><text>ТВ1</text><div class="marker noData" id="markerTI1"></div></div>
+            <div><text>ТВ2</text><div class="marker noData" id="markerTI2"></div></div>
+            <div><text>ТВ3</text><div class="marker noData" id="markerTI3"></div></div>
+            <div><text>ТВ4</text><div class="marker noData" id="markerTI4"></div></div>
         </div>
         <div class="weatherBar">
             <text>Обновление</text>
@@ -90,7 +99,7 @@
         </div>
         <hr/>
         <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
-        <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+        <a id="logout" href="#" th:href="@{/logout}">Выйти</a>
     </div>
     <div class="messageHolder">
         <div class="message green hidden" id="ti1_ok">
@@ -145,20 +154,6 @@
 </body>
 
 <script>
-    let needShowFirstTIError = true;
-    let needShowSecondTIError = true;
-    let needShowThirdTIError = true;
-    let needShowFourthTIError = true;
-    let needShowWeatherStationError = true;
-    let needShowMIPError= true;
-    let needBeep = false;
-    let firstTIError = false;
-    let secondTIError = false;
-    let thirdTIError = false;
-    let fourthTIError = false;
-    let weatherStationError = false;
-    let MIPError = false;
-
     $("#makeChartRequest").click(function (){
 
 
@@ -255,122 +250,7 @@
             });
     }
 
-    function updateAlertsFetch(){
-        fetch ("/getAlerts", {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: null,
-        })
-            .then((response) => {
-                response.text().then(function (data){
-                    console.log('caught');
-                    let insideData = JSON.parse(data);
-                    if(firstTIError != insideData["firstTIError"]){
-                        needShowFirstTIError = true;
-                    }
-                    else {
-                        needShowFirstTIError = false
-                    }
-                    if(secondTIError != insideData["secondTIError"]){
-                        needShowSecondTIError = true;
-                    }
-                    else {
-                        needShowSecondTIError = false
-                    }
-                    if(thirdTIError != insideData["thirdTIError"]){
-                        needShowThirdTIError = true;
-                    }
-                    else {
-                        needShowThirdTIError = false
-                    }
-                    if(fourthTIError != insideData["fourthTIError"]){
-                        needShowFourthTIError = true;
-                    }
-                    else {
-                        needShowFourthTIError = false
-                    }
-                    if(weatherStationError != insideData["weatherStationError"]){
-                        needShowWeatherStationError = true;
-                    }
-                    else {
-                        needShowWeatherStationError = false;
-                    }
-                    if(MIPError != insideData["MIPError"]){
-                        needShowMIPError = true;
-                    }
-                    else {
-                        needShowMIPError = false;
-                    }
-                    needBeep = insideData["beep"];
-                    firstTIError = insideData["firstTIError"];
-                    secondTIError = insideData["secondTIError"];
-                    thirdTIError = insideData["thirdTIError"];
-                    fourthTIError = insideData["fourthTIError"];
-                    weatherStationError = insideData["weatherStationError"];
-                    MIPError = insideData["MIPError"];
-                    updateAlerts();
-                    if(needBeep){
-                        beep();
-                    }
-                })
 
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-    }
-    function updateAlerts(){
-        if(needShowFirstTIError && firstTIError){
-            $("#ti1_ok").addClass('hidden');
-            $("#ti1_error").removeClass('hidden');
-        }
-        if(needShowSecondTIError && secondTIError){
-            $("#ti2_ok").addClass('hidden');
-            $("#ti2_error").removeClass('hidden');
-        }
-        if(needShowThirdTIError && thirdTIError){
-            $("#ti3_ok").addClass('hidden');
-            $("#ti3_error").removeClass('hidden');
-        }
-        if(needShowFourthTIError && fourthTIError){
-            $("#ti4_ok").addClass('hidden');
-            $("#ti4_error").removeClass('hidden');
-        }
-        if(needShowWeatherStationError && weatherStationError){
-            $("#ws_ok").addClass('hidden');
-            $("#ws_error").removeClass('hidden');
-        }
-        if(needShowMIPError && MIPError){
-            $("#mip_ok").addClass('hidden');
-            $("#mip_error").removeClass('hidden');
-        }
-        if(needShowFirstTIError && !firstTIError){
-            $("#ti1_error").addClass('hidden');
-            $("#ti1_ok").removeClass('hidden');
-        }
-        if(needShowSecondTIError && !secondTIError){
-            $("#ti2_error").addClass('hidden');
-            $("#ti2_ok").removeClass('hidden');
-        }
-        if(needShowThirdTIError && !thirdTIError){
-            $("#ti3_error").addClass('hidden');
-            $("#ti3_ok").removeClass('hidden');
-        }
-        if(needShowFourthTIError && !fourthTIError){
-            $("#ti4_error").addClass('hidden');
-            $("#ti4_ok").removeClass('hidden');
-        }
-        if(needShowWeatherStationError && !weatherStationError){
-            $("#ws_error").addClass('hidden');
-            $("#ws_ok").removeClass('hidden');
-        }
-        if(needShowMIPError && !MIPError){
-            $("#mip_error").addClass('hidden');
-            $("#mip_ok").removeClass('hidden');
-        }
-    }
     $(".messageCross").each(function (){
         $(this).click(function (){
             $(this).parent().addClass("hidden");

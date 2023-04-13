@@ -1,6 +1,7 @@
 package com.i4rt.temperaturecontrol.controllers;
 
 import com.i4rt.temperaturecontrol.Services.AlertSetter;
+import com.i4rt.temperaturecontrol.Services.SystemParametersHolder;
 import com.i4rt.temperaturecontrol.additional.GotPicImageCounter;
 import com.i4rt.temperaturecontrol.additional.UploadedImageCounter;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
@@ -66,6 +67,7 @@ public class MainController {
         List<ControlObject> controlObjectsToDisplay = controlObjectRepo.getControlObjectsToDisplay();
         model.addAttribute("controlObjects", controlObjects);
         model.addAttribute("controlObjectsToDisplay", controlObjectsToDisplay);
+        model.addAttribute("limit", SystemParametersHolder.getInstance().getLogLimit());
 
         model.addAttribute("src", "\"img/bg/map"+ UploadedImageCounter.getCurrentCounter() +".png\""); //Make getCurrentCounter method do not throw exception (try/catch)
 

@@ -90,6 +90,7 @@ body{
 
     font-family: "Arial";
     font-size: medium;
+    cursor: pointer;
 }
 .buttonsBar>*:hover{
     background-color: #526fbf;
@@ -196,26 +197,16 @@ body{
 
     border-radius: 100px;
     border: 2px solid dimgray;
+    cursor: pointer;
 
 }
 .noData{
     color: darkgray;
 }
-.normal{
-    color: forestgreen;
+.normal, .danger, .predicted, .dangerDifference{
+    color: black;
 }
-.warning{
-    color: #fffb00;
-}
-.danger{
-    color: red;
-}
-.dangerDifference{
-    color: red;
-}
-.predicted{
-    color: #fffb00;
-}
+
 
 .marker.normal{
     background-color: forestgreen;

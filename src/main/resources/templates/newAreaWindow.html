@@ -153,7 +153,13 @@
                 <div class="myRow "><text>Критическая температура, °C: </text> <input class="dangerTemp" type="number" title="Критическая температура" th:value="${controlObject.dangerTemp}" ></div>
                 <div class="myRow "><text style="width: 55%">Критическая разность температур, °C: </text> <input class="warningTemp" type="number" title="Повышенная температура" th:value="${controlObject.warningTemp}" ></div>
                 <div class="myRow "><text style="width: 55%">Допустимое отличие от модели, °C: </text> <input class="maxPredictedDifference" type="number" title="Допустимое отличие от модели" th:value="${controlObject.maxPredictedDifference}" ></div>
-                <div class="myRow "><text style="width: 55%">Зона контроля МИП: </text>
+                <div class="myRow "><text style="width: 55%">Ввод МИП: </text>
+                    <select name="MIPLine" id="MIPLine" th:field="${controlObject.voltageMeasurementLine}" required>
+                        <option th:value="'1'" th:text="1">1</option>
+                        <option th:value="'2'" th:text="2">2</option>
+                    </select>
+                </div>
+                <div class="myRow "><text style="width: 55%">Фаза МИП: </text>
                     <select name="MIPChanel" id="MIPChanel" th:field="${controlObject.voltageMeasurementChannel}" required>
                         <option th:value="'A'" th:text="A">A</option>
                         <option th:value="'B'" th:text="B">B</option>
@@ -165,7 +171,7 @@
 
                 <button class="basicButton" th:attr="onclick=|updateObject(${controlObject.id})|">Сохранить</button>
                 <a style="width: 100%" href="/adding"><button class="basicButton"> Обновить координаты</button></a>
-                <a href="/adding"><button class="basicButton">Отмена создания</button></a>
+                <a style="width: 100%" href="/main"><button class="basicButton delButton">Отмена создания</button></a>
             </div>
         </div>
 
@@ -197,7 +203,7 @@
         <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
         <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
         <a href="/user">Изменить пароль</a>
-        <a id="logout" href="#" th:href="@{/logout}">Log Out</a>
+        <a id="logout" href="#" th:href="@{/logout}">Выйти</a>
     </div>
 
     <div class="messageHolder">
@@ -296,7 +302,8 @@
                 "\"dangerTemp\": " + $(".dangerTemp").val() +"," +
                 "\"warningTemp\": " + $(".warningTemp").val() + "," +
                 "\"maxPredictedDifference\": "+ $('.maxPredictedDifference').val() + "," +
-                "\"MIPChanel\": " + $("#MIPChanel").val() +
+                "\"MIPChanel\": " + $("#MIPChanel").val() + "," +
+                "\"MIPLine\": " + $("#MIPLine").val() +
                 "}";
 
                 console.log(currentDataInside);
@@ -335,8 +342,9 @@
                 'Content-Type': 'application/json',
             },
             body: null,
-        });
-        window.location.replace("main");
+        })
+
+
 
     });
 

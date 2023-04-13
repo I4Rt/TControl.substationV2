@@ -37,17 +37,29 @@ public class MIPSaver extends Thread{
                 while (true){
                     Thread.sleep(20000);
                     MIPMeasurement mipMeasurement = new MIPMeasurement();
-                    mipMeasurement.setPowerA(MIPControlThread.lastMeasurement.getPowerA());
-                    mipMeasurement.setPowerB(MIPControlThread.lastMeasurement.getPowerB());
-                    mipMeasurement.setPowerC(MIPControlThread.lastMeasurement.getPowerC());
-                    mipMeasurement.setAmperageA(MIPControlThread.lastMeasurement.getAmperageA());
-                    mipMeasurement.setAmperageB(MIPControlThread.lastMeasurement.getAmperageB());
-                    mipMeasurement.setAmperageC(MIPControlThread.lastMeasurement.getAmperageC());
-                    mipMeasurement.setVoltageA(MIPControlThread.lastMeasurement.getVoltageA());
-                    mipMeasurement.setVoltageB(MIPControlThread.lastMeasurement.getVoltageB());
-                    mipMeasurement.setVoltageC(MIPControlThread.lastMeasurement.getVoltageC());
+                    mipMeasurement.setPowerA1(MIPControlThread.lastMeasurement.getPowerA1());
+                    mipMeasurement.setPowerB1(MIPControlThread.lastMeasurement.getPowerB1());
+                    mipMeasurement.setPowerC1(MIPControlThread.lastMeasurement.getPowerC1());
+                    mipMeasurement.setAmperageA1(MIPControlThread.lastMeasurement.getAmperageA1());
+                    mipMeasurement.setAmperageB1(MIPControlThread.lastMeasurement.getAmperageB1());
+                    mipMeasurement.setAmperageC1(MIPControlThread.lastMeasurement.getAmperageC1());
+                    mipMeasurement.setVoltageA1(MIPControlThread.lastMeasurement.getVoltageA1());
+                    mipMeasurement.setVoltageB1(MIPControlThread.lastMeasurement.getVoltageB1());
+                    mipMeasurement.setVoltageC1(MIPControlThread.lastMeasurement.getVoltageC1());
+
+                    mipMeasurement.setPowerA2(MIPControlThread.lastMeasurement.getPowerA2());
+                    mipMeasurement.setPowerB2(MIPControlThread.lastMeasurement.getPowerB2());
+                    mipMeasurement.setPowerC2(MIPControlThread.lastMeasurement.getPowerC2());
+                    mipMeasurement.setAmperageA2(MIPControlThread.lastMeasurement.getAmperageA2());
+                    mipMeasurement.setAmperageB2(MIPControlThread.lastMeasurement.getAmperageB2());
+                    mipMeasurement.setAmperageC2(MIPControlThread.lastMeasurement.getAmperageC2());
+                    mipMeasurement.setVoltageA2(MIPControlThread.lastMeasurement.getVoltageA2());
+                    mipMeasurement.setVoltageB2(MIPControlThread.lastMeasurement.getVoltageB2());
+                    mipMeasurement.setVoltageC2(MIPControlThread.lastMeasurement.getVoltageC2());
+
                     mipMeasurement.setDatetime(MIPControlThread.lastMeasurement.getDatetime());
-                    if(MIPControlThread.lastMeasurement.getPowerA() != null)
+
+                    if(MIPControlThread.lastMeasurement.getPowerA2() != null)
                         MIPMeasurementRepo.save(mipMeasurement);
 
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <title>Main</title>
@@ -15,6 +16,12 @@
 <style>
     *{
         font-size: 14px;
+    }
+    .mute{
+        background-image: url('img/icons/mute.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
     }
     .logArea{
         position: relative;
@@ -33,12 +40,15 @@
         border-bottom: 2px solid darkgray;
         font-weight: bold;
         font-size: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     .logText{
         padding: 5px;
         position: relative;
-        top:30px;
-        height: 107px;
+        top:34px;
+        height: 103px;
         display: flex;
         flex-direction: column;
         width: 834px;
@@ -50,6 +60,13 @@
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+    }
+    .dangerDifference.mute{
+        background-color: red;
+        background-image: url('img/icons/mute.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
     }
 </style>
 <body>
@@ -73,7 +90,12 @@
 
     <div class="main">
         <div class="logArea">
-            <div class="logHeader">Лог событий</div>
+            <div class="logHeader">
+                <text>Лог событий</text>
+                <div style="display: inherit; align-items: center;">
+                    <div style="font-size: 14px; font-weight: normal; margin-right: 10px"> Количество записей: </div><input id="limit" type="number" th:value="${limit}" onchange="setNewLogLimit()" min="100" max="1000" step="1" required></div>
+                </div>
+
             <div class="logText">
 
             </div>
@@ -83,7 +105,7 @@
 
             <div  class="mapImage" th:style="'background-image:url(' + ${src} + ');'">
                 <div class="maxSize" >
-                    <a class="marker mapMarker" th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="${controlObjectToDisplay.controlObjectTIChangingPart.temperatureClass}" th:name="${controlObjectToDisplay.id}">
+                    <a class="marker mapMarker"  th:each="controlObjectToDisplay : ${controlObjectsToDisplay}" th:attr="style=|position: absolute; top: ${controlObjectToDisplay.getMapY}px; left: ${controlObjectToDisplay.getMapX}px;|, title=|${controlObjectToDisplay.getName}|" th:classappend="|${controlObjectToDisplay.controlObjectTIChangingPart.temperatureClass} ${controlObjectToDisplay.needMute ? 'mute' : ''}|" th:name="${controlObjectToDisplay.id}">
                     </a>
                 </div>
             </div>
@@ -91,16 +113,15 @@
                 <div class="mapActionButton" id="newMarker" title="Добавить маркер на карту"><img src="img/icons/pin.png" style="width: 24px; height: 24px;"></div>
                 <div class="mapActionButton" id="removeMarker" title="Убрать маркер с карты"><img src="img/icons/unpin.png" style="width: 24px; height: 24px;"></div>
                 <div class="mapActionButton" id="upload" title="Сменить подложку"><img src="img/icons/bgSetting.png" style="width: 24px; height: 24px;"></div>
-                <div class="mapActionButton" id="help" title="Справка"><img src="img/icons/question.png" style="width: 24px; height: 24px;"></div>
             </div>
         </div>
 
         <div class="list" style="height: 750px">
-            <div class="myRow" style="font-size: 18px; width: calc(100% - 8px);height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b style="font-size: 16px">Участки наблюдения</b></b></div>
-            <div class="myRow areaList" style="gap: 0px">
+            <div class="myRow" style="position:absolute; width: 273px;font-size: 18px; height: 28px; padding: 4px; background-color: white; border-bottom: 2px solid darkgray"><b style="font-size: 16px">Участки наблюдения</b></b></div>
+            <div class="myRow areaList" style="gap: 0px; position: relative;top: 43px;width: 278px;height: 705px;overflow-y: scroll;">
                 <a th:each="controlObject : ${controlObjects}" th:href="@{/area?id={id}(id=${controlObject.getId})}" class="myRow areaInfo">
                         <text th:utext="${controlObject.name}">Зона 1</text>
-                        <div class="marker " th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}" th:name="${controlObject.id}"></div>
+                        <div class="marker " th:classappend="|${controlObject.controlObjectTIChangingPart.temperatureClass} ${controlObject.needMute ? 'mute' : ''}|" th:name="${controlObject.id}"></div>
                 </a>
             </div>
         </div>
@@ -131,7 +152,7 @@
         <a th:classappend="${adderClass}" href="/register">Зарегистрировать нового <br>пользователя</a>
         <a th:classappend="${adderClass}" href="/usersList">Список пользователей</a>
         <a href="/user">Изменить пароль</a>
-        <a href="#" th:href="@{/logout}">Log Out</a>
+        <a href="#" th:href="@{/logout}">Выйти</a>
     </div>
 
     <div class="uploadWindow myColumn hidden">
@@ -156,7 +177,7 @@
         <div class="myColumn chooseObjectWindow" style="margin-top: 35px !important;">
             <div th:each="controlObject : ${controlObjects}" class="myRow areaInfo" th:name="${controlObject.id}" >
                 <text th:utext="${controlObject.name}"></text>
-                <div class="marker" th:classappend="${controlObject.controlObjectTIChangingPart.temperatureClass}"></div>
+                <div class="marker" th:classappend="|${controlObject.controlObjectTIChangingPart.temperatureClass}|"></div>
             </div>
         </div>
     </div>
@@ -218,6 +239,27 @@
 <script src="js/warnings.js"></script>
 <script>
 
+    function setNewLogLimit(){
+        console.log("Изменение лимита лога")
+        fetch (`/setLogLimit?limit=${$("#limit").val()}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) => {
+            response.text().then(function (data){
+                getLogRecords()
+            })
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+
     let currentData;
     console.log(currentData);
 
@@ -234,7 +276,6 @@
                     console.log(data)
                     currentData = JSON.parse(data);
                     console.log(currentData);
-
                     redraw();
                 })
 
@@ -280,14 +321,13 @@
 
         let dataToDisplay = currentData[1];
         for(let elementId = 0; elementId < dataToDisplay.length; elementId+=1) {
-
-            $(".maxSize").append("<a class=\"marker mapMarker " + dataToDisplay[elementId]["temperatureClass"] + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  name=\"" + dataToDisplay[elementId]["id"] + "\" >");
+            $(".maxSize").append("<a class=\"marker mapMarker " + dataToDisplay[elementId]["temperatureClass"] + " " + (dataToDisplay[elementId]["needMute"] ? "mute" : "")  + "\" style=\"position: absolute; top:" + dataToDisplay[elementId]["mapY"] + "px; left: " + dataToDisplay[elementId]["mapX"] + "px\" title=\"" + dataToDisplay[elementId]["name"] + "\"  name=\"" + dataToDisplay[elementId]["id"] + "\" >");
         }
 
         $(".areaList").empty();
         let dataToList = currentData[0];
         for(let elementId = 0; elementId < dataToList.length; elementId+=1) {
-            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + "\" name=\"" + dataToList[elementId]["id"] + "\"></div></a>");
+            $(".areaList").append("<a class=\"myRow areaInfo\" href=\"/area?id=" + dataToList[elementId]["id"] + "\"><text>"+dataToList[elementId]["name"]+"</text><div class=\"marker " + dataToList[elementId]["temperatureClass"] + " "  + (dataToList[elementId]["needMute"] ? "mute" : "")  + "\" name=\"" + dataToList[elementId]["id"] + "\"></div></a>");
         }
         activateMarkers();
     }
@@ -486,7 +526,7 @@
                         let elem = "<text> <b>" + r['datetime'] + "</b>: "+ r['text'] +"</text>";
                         $('.logText').append(elem);
                     }
-
+                    console.log("В логе " + result.length + " записей")
 
                 })
 
@@ -497,9 +537,13 @@
     }
 
     $(document).ready(
+
         activateMarkers()
 
     )
+
+
+
 </script>
 
 
