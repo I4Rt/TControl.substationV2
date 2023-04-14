@@ -187,7 +187,7 @@ public class TITemperatureCheckThread extends Thread{
                                                 logRecordRepo.save(logRecord2);
                                                 break;
                                             case "predicted":
-                                                LogRecord logRecord3 = new LogRecord(co.getName() + ": Зафиксировано отклонение от плановой температуры");
+                                                LogRecord logRecord3 = new LogRecord(co.getName() + ": Зафиксировано отклонение от прогнозируемой температуры");
                                                 logRecordRepo.save(logRecord3);
                                                 break;
                                         }

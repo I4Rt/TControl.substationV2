@@ -7,11 +7,13 @@ import com.i4rt.temperaturecontrol.additional.UploadedImageCounter;
 import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.device.ThermalImager;
 import com.i4rt.temperaturecontrol.model.ControlObject;
+import com.i4rt.temperaturecontrol.model.LogRecord;
 import com.i4rt.temperaturecontrol.model.User;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
 
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,11 +25,16 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.xml.bind.SchemaOutputResolver;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class MainController {
@@ -40,17 +47,20 @@ public class MainController {
     private final ThermalImagerRepo thermalImagerRepo;
     @Autowired
     private final UserRepo userRepo;
+    @Autowired
+    private LogRecordRepo logRecordRepo;
 
     @Autowired
     ControlObjectTIChangingPartRepo controlObjectTIChangingPartRepo;
 
 
-    public MainController(ControlObjectRepo controlObjectRepo, ControlObjectTIChangingPartRepo controlObjectTIChangingPartRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo) {
+    public MainController(ControlObjectRepo controlObjectRepo, ControlObjectTIChangingPartRepo controlObjectTIChangingPartRepo, MeasurementRepo measurementRepo, ThermalImagerRepo thermalImagerRepo, UserRepo userRepo, LogRecordRepo logRecordRepo) {
         this.controlObjectTIChangingPartRepo = controlObjectTIChangingPartRepo;
         this.controlObjectRepo = controlObjectRepo;
         this.measurementRepo = measurementRepo;
         this.thermalImagerRepo = thermalImagerRepo;
         this.userRepo = userRepo;
+        this.logRecordRepo = logRecordRepo;
 
         AlertSetter.setNeedBeep(controlObjectTIChangingPartRepo);
     }
@@ -69,6 +79,11 @@ public class MainController {
         model.addAttribute("controlObjectsToDisplay", controlObjectsToDisplay);
         model.addAttribute("limit", SystemParametersHolder.getInstance().getLogLimit());
 
+        List<Map> result = new ArrayList<>();
+        for(LogRecord r: logRecordRepo.getLast(SystemParametersHolder.getInstance().getLogLimit())){
+            result.add(r.getMapped());
+        }
+        model.addAttribute("logList", result);
         model.addAttribute("src", "\"img/bg/map"+ UploadedImageCounter.getCurrentCounter() +".png\""); //Make getCurrentCounter method do not throw exception (try/catch)
 
         User user = userRepo.getByUserLogin(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -406,7 +421,6 @@ public class MainController {
 
         return "/pointReportPage";
     }
-
 
 
 }

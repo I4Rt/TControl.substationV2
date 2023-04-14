@@ -96,8 +96,11 @@
                     <div style="font-size: 14px; font-weight: normal; margin-right: 10px"> Количество записей: </div><input id="limit" type="number" th:value="${limit}" onchange="setNewLogLimit()" min="100" max="1000" step="1" required></div>
                 </div>
 
-            <div class="logText">
 
+            <div class="logText">
+                <div th:each="logRecord : ${logList}">
+                    <text> <b th:text="|${logRecord.get('datetime')}| + ': '"></b><text th:text=" ${logRecord.get('text')}"></text></text>
+                </div>
             </div>
         </div>
         <div class="map">

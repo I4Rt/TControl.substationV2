@@ -901,9 +901,15 @@
                 body: null,
             })
             .then((response) =>{
+                console.log(response.status)
                     response.text().then(function (data){
-                        let res = alert("Область контроля удалена")
-                        window.location.replace("/main");
+                        if(response.status == 403){
+                            document.location.replace("/403")
+                        }
+                        else{window.location.replace("/main");
+
+                        }
+
                     });
                 }
             );
@@ -1019,9 +1025,15 @@
             },
             body: JSON.stringify(data),
         })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        .then((response) =>{
+            if(response.status == 403){
+                document.location.replace("/403")
+            }
+        })
+        .catch((error) => {
+            console.log('Status: ' + error.response.status)
+            document.location.replace("/" + error.response.status)
+        });
     }
 
     function updateMute(){
@@ -1034,7 +1046,9 @@
             body: null,
         })
             .then((response) => {
+
                 response.text().then(function (data1){
+
                     if (data1 == "true"){
                         $("#sliderCheckbox").prop('checked',false);
                     }
@@ -1045,7 +1059,8 @@
 
             })
             .catch((error) => {
-                console.error('Error:', error);
+                console.log('Error: ' + error)
+
             });
     }
 

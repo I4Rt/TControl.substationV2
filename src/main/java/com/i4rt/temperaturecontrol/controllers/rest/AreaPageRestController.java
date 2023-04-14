@@ -7,10 +7,14 @@ import com.i4rt.temperaturecontrol.databaseInterfaces.*;
 import com.i4rt.temperaturecontrol.model.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Node;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.text.ParseException;
@@ -466,8 +470,10 @@ public class AreaPageRestController {
         return co.isNeedMute() ? "true" : "false";
     }
 
+    //@PreAuthorize("hasAuthority('ADMIN')") //WORKS!
+    //@Secured({"ADMIN"})
     @RequestMapping(value = "setMute", method = RequestMethod.POST)
-    public void set(@RequestBody String jsonData){
+    public void set(HttpServletResponse response, @RequestBody String jsonData){
         JSONObject data = new org.json.JSONObject(jsonData);
 
         ControlObject co = controlObjectRepo.getById(data.getLong("id"));
