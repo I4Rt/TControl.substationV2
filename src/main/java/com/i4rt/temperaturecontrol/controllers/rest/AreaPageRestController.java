@@ -80,7 +80,8 @@ public class AreaPageRestController {
                     System.out.println("last: " + lastCloseData);
 
                     if (lastCloseData != null){
-                        curControlObject.getControlObjectTIChangingPart().updateTemperatureClass(lastCloseData.getNodeTemperature(), lastCloseData.getTemperature(), lastCloseData.getPredictedTemperature());
+                        ArrayList<CloseData> lastCloseDataList = closeDataRepo.getCloseDataLimited(curControlObject.getId(), 3); // 3 потому что одна запись используется как основная
+                        curControlObject.getControlObjectTIChangingPart().updateTemperatureClass(lastCloseData.getNodeTemperature(), lastCloseData.getTemperature(), lastCloseData.getPredictedTemperature(), lastCloseDataList);
 
                         System.out.println("new temp class: " + curControlObject.getControlObjectTIChangingPart().getTemperatureClass());
                     }
@@ -482,5 +483,12 @@ public class AreaPageRestController {
         AlertSetter.setNeedBeep(controlObjectTIChangingPartRepo);
         //System.out.println("need mute: " + data.getBoolean("mute"));
     }
+
+    @RequestMapping(value = "deleteNote", method = RequestMethod.POST)
+    public String deleteNodeNote(@RequestParam Long id){
+        nodeNoteRepo.deleteById(id);
+        return "ok";
+    }
+
 
 }

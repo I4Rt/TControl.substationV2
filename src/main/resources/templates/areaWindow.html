@@ -120,10 +120,28 @@
     let curPowerArray;
     let curPredictedArray;
     let curTemperatureArray;
-
-    function updateLogRecords(){
+    function deleteComment(id){
+        fetch(`/deleteNote?id=${id}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: null,
+        })
+        .then((response) =>{
+                console.log(response.status)
+                response.text().then(function (data){
+                    if(response.status == 403){
+                        document.location.replace("/403")
+                    }
+                    updateNoteRecords();
+                });
+            }
+        );
+    }
+    function updateNoteRecords(){
         let curId = $("#curId").html()
-        let dataToSend = "{'id':"+curId+", 'limit':100}"
+        let dataToSend = "{'id':"+curId+", 'limit':1000}"
         fetch("/getNodeNotes", {
             method: "POST",
             headers: {
@@ -140,7 +158,7 @@
                         $('.log').empty()
                         for (let i = 0; i < logRecords.length; i++){
                             let r = logRecords[i]
-                            let elem = "<text> <b>" + r['datetime'] +"   "+ r['user'] +"</b> "+ r['record'] +"</text>"
+                            let elem = "<div style='display: flex; justify-content: space-between; align-items: center; width: 100%;'><div style='width: 90%'><text> <b>" + r['datetime'] +"   "+ r['user'] +"</b> "+ r['record'] +"</text></div><button style='width: 6%; padding:0px; background:none; border:none;' title=\"Удалить комментарий\" onclick='deleteComment(" + r['id'] + ")'>✖</button></div>"
                             $('.log').append(elem)
                         }
                     }
@@ -522,7 +540,7 @@
         updateAlertsFetch();
         updateData();
         updateWeather();
-        updateLogRecords();
+        updateNoteRecords();
     }, 3000);
 </script>
 <body>
@@ -1002,7 +1020,7 @@
                 .then((response) => {
                     response.text().then(function (data){
                         $("#record").val("")
-                        updateLogRecords();
+                        updateNoteRecords();
                     });
 
                 })
@@ -1064,9 +1082,10 @@
             });
     }
 
-    $(document).ready(
-        updateMute()
-    )
+    $(document).ready(function (){
+            updateNoteRecords();
+            updateMute();
+    })
 </script>
 
 

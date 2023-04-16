@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -33,29 +34,47 @@ public class ControlObjectTIChangingPart {
     private List<Measurement> measurements;
 
 
-    public void updateTemperatureClass(Double curTemp, Double curWeatherTemp, Double predicted){
-        System.out.println(curTemp);
-        System.out.println(curWeatherTemp);
-        System.out.println(predicted);
-        System.out.println(controlObject.getDangerTemp());
-        System.out.println(controlObject.getWarningTemp());
-        System.out.println(controlObject.getMaxPredictedDifference());
+    public void updateTemperatureClass(Double curTemp, Double curWeatherTemp, Double predicted, ArrayList<CloseData> lastCloseData){
+//        System.out.println(curTemp);
+//        System.out.println(curWeatherTemp);
+//        System.out.println(predicted);
+//        System.out.println(controlObject.getDangerTemp());
+//        System.out.println(controlObject.getWarningTemp());
+//        System.out.println(controlObject.getMaxPredictedDifference());
 
+        setTemperatureClass("normal");
+
+        if (predicted != null && curTemp - predicted > controlObject.getMaxPredictedDifference()){
+
+            Boolean needSetPredicted = true;
+            for(CloseData closeData: lastCloseData){
+                if (closeData.getNodeTemperature() - closeData.getPredictedTemperature() < controlObject.getMaxPredictedDifference()){
+                    needSetPredicted = false;
+                }
+            }
+            if (needSetPredicted)
+                setTemperatureClass("predicted");
+
+        }
+        if(curWeatherTemp != null && curTemp - curWeatherTemp > controlObject.getWarningTemp() ){
+            Boolean needSetDangerDifference = true;
+            for(CloseData closeData: lastCloseData){
+                if (closeData.getNodeTemperature() - closeData.getTemperature() < controlObject.getWarningTemp()){
+                    needSetDangerDifference = false;
+                }
+            }
+            if (needSetDangerDifference)
+                setTemperatureClass("dangerDifference");
+        }
         if(curTemp > controlObject.getDangerTemp()) {
-            System.out.println("h1");
-            setTemperatureClass("danger");
-        }
-        else if(curWeatherTemp != null && Math.abs(curTemp - curWeatherTemp) > controlObject.getWarningTemp() ){
-            System.out.println("h2");
-            setTemperatureClass("dangerDifference");
-        }
-        else if (predicted != null && Math.abs(curTemp - predicted) > controlObject.getMaxPredictedDifference()){
-            System.out.println("h3");
-            setTemperatureClass("predicted");
-        }
-        else{
-            System.out.println("h4");
-            setTemperatureClass("normal");
+            Boolean needSetDanger = true;
+            for(CloseData closeData: lastCloseData){
+                if (closeData.getNodeTemperature() < controlObject.getDangerTemp()){
+                    needSetDanger = false;
+                }
+            }
+            if (needSetDanger)
+                setTemperatureClass("danger");
         }
 
 

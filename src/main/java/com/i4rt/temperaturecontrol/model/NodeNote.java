@@ -36,6 +36,7 @@ public class NodeNote {
 
     public Map getMapped(){
         Map<String, Object> data = new HashMap<>();
+        data.put("id", id);
         data.put("datetime", new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").format(datetime));
         data.put("user", userName);
         data.put("record", record);

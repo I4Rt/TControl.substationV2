@@ -49,12 +49,6 @@ public class TITemperatureCheckThread extends Thread{
 
     }
 
-
-
-    
-
-
-
     @SneakyThrows
     public void run(){
         AlertHolder alertHolder = AlertHolder.getInstance();
@@ -155,13 +149,14 @@ public class TITemperatureCheckThread extends Thread{
 
                                         String pythonResponse  = pythonServer.sendPostNoAuth("predict", CloseDataService.getLastDataJson(co.getId()));
                                         System.out.println("\n\n python: " + pythonResponse + "\n\n");
+                                        ArrayList<CloseData> lastData = closeDataRepo.getCloseDataLimited(co.getId(), 2);
                                         if (pythonResponse != null){
                                             JSONObject data = new JSONObject(pythonResponse);
                                             CloseDataService.saveData(co.getId(), curTemperature, data.getDouble("predict"));
-                                            coTI.updateTemperatureClass(curTemperature, weatherMeasurementRepo.getLastWeatherMeasurement() != null ? weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature() : null, data.getDouble("predict"));
+                                            coTI.updateTemperatureClass(curTemperature, weatherMeasurementRepo.getLastWeatherMeasurement() != null ? weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature() : null, data.getDouble("predict"), lastData);
                                         }
                                         else{
-                                            coTI.updateTemperatureClass(curTemperature ,weatherMeasurementRepo.getLastWeatherMeasurement() != null ? weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature() : null, null);
+                                            coTI.updateTemperatureClass(curTemperature ,weatherMeasurementRepo.getLastWeatherMeasurement() != null ? weatherMeasurementRepo.getLastWeatherMeasurement().getTemperature() : null, null, lastData);
                                             CloseDataService.saveData(co.getId(), curTemperature, null);
                                         }
 
